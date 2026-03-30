@@ -9,23 +9,27 @@ export const pixelHandler = async (conn, m, conf) => {
                      (type === 'extendedTextMessage') ? m.message.extendedTextMessage.text : 
                      (type === 'imageMessage' || type === 'videoMessage') ? m.message.imageMessage.caption : '';
 
-        if (!body) return; // Si no hay texto, no hacemos nada
+        if (!body) return;
 
-        // 2. Lógica de Prefijos
+        // 2. Definir Variables de Entorno y Permisos
+        const from = m.key.remoteJid;
+        const isGroup = from.endsWith('@g.us');
+        const sender = isGroup ? m.key.participant : from;
+        const isOwner = config.owner.some(num => sender.includes(num));
+
+        // --- FILTRO CRÍTICO DE PRIVADO ---
+        // Si no es grupo y NO es el owner, ignoramos TODO (Silencio absoluto)
+        if (!isGroup && !isOwner) return; 
+
+        // 3. Lógica de Prefijos
         const prefix = config.prefix;
         const isCmd = body.startsWith(prefix);
         const commandText = isCmd ? body.slice(prefix.length).trim().split(' ')[0].toLowerCase() : body.trim().split(' ')[0].toLowerCase();
         const args = body.trim().split(/ +/).slice(1);
 
-        // 3. Buscar el comando en la colección global
+        // 4. Buscar el comando
         const cmd = global.commands.get(commandText);
         if (!cmd) return;
-
-        // 4. Definir Variables de Entorno (Contexto)
-        const from = m.key.remoteJid;
-        const isGroup = from.endsWith('@g.us');
-        const sender = isGroup ? m.key.participant : from;
-        const isOwner = config.owner.some(num => sender.includes(num));
 
         // Obtener datos del grupo si aplica
         let groupMetadata, participants, groupAdmins;
@@ -39,24 +43,26 @@ export const pixelHandler = async (conn, m, conf) => {
 
         // 5. Verificación de Propiedades (Avisos de Pixel)
         
-        // Solo Owner
+        // Propiedad: Solo Owner (Aplica en grupos o privado)
         if (cmd.isOwner && !isOwner) {
             return await conn.sendMessage(from, { 
-                text: `⚠️ *ACCESO DENEGADO*\n\nEste comando es exclusivo para el **Owner** del bot.` 
+                text: `⚠️ *ACCESO DENEGADO*\n\nEste comando es exclusivo para el **Owner**.` 
             }, { quoted: m });
         }
 
-        // Solo Admins
-        if (cmd.isAdmin && !isAdmin) {
-            return await conn.sendMessage(from, { 
-                text: `❌ *ERROR DE RANGO*\n\nLo siento, este comando solo puede ser utilizado por los **Administradores** del grupo.` 
-            }, { quoted: m });
-        }
-
-        // Solo Grupos
+        // Propiedad: Solo Grupos
         if (cmd.isGroup && !isGroup) {
+            // Como ya filtramos que en privado solo entras TÚ, este aviso solo lo verías tú
+            // si intentas usar un comando de grupo en tu propio chat privado.
             return await conn.sendMessage(from, { 
-                text: `🏢 *SOLO GRUPOS*\n\nEste comando está diseñado para funcionar únicamente dentro de grupos.` 
+                text: `🏢 *SOLO GRUPOS*\n\nEste comando no funciona aquí.` 
+            }, { quoted: m });
+        }
+
+        // Propiedad: Solo Admins (Solo en grupos)
+        if (cmd.isAdmin && !isAdmin && isGroup) {
+            return await conn.sendMessage(from, { 
+                text: `❌ *ERROR DE RANGO*\n\nSolo **Administradores** pueden usar esto.` 
             }, { quoted: m });
         }
 
