@@ -1,7 +1,6 @@
 import { startSubBot } from '../sockets/index.js';
 import { config } from '../config.js';
 
-// Mapa para gestionar el tiempo de espera (Cooldown)
 const cooldowns = new Map();
 
 const codeCommand = {
@@ -10,36 +9,27 @@ const codeCommand = {
     category: 'sockets',
     isOwner: false,
     isAdmin: false,
-    isGroup: false, // Solo se puede usar en chat privado como pediste
+    isGroup: false,
 
-    run: async (conn, m, { prefix, senderNumber }) => {
+    run: async (conn, m, { senderNumber }) => {
         const from = m.key.remoteJid;
 
-        // 1. Verificar Cooldown (1 minuto)
+        // 1. Cooldown
         const now = Date.now();
-        const cooldownAmount = 60 * 1000;
-        if (cooldowns.has(from)) {
-            const expirationTime = cooldowns.get(from) + cooldownAmount;
-            if (now < expirationTime) {
-                const timeLeft = Math.round((expirationTime - now) / 1000);
-                return await conn.sendMessage(from, { 
-                    text: `[✿︎] Debes esperar un poco para volver a ser socket.\n> ¡Vuelve en *${timeLeft} segundos* para intentar de nuevo!`,
-                    contextInfo: {
-                        externalAdReply: {
-                            title: 'KAZUMA - COOLDOWN',
-                            body: 'Espera un momento...',
-                            thumbnailUrl: 'https://files.catbox.moe/9ssbf9.jpg',
-                            mediaType: 1,
-                            renderLargerThumbnail: false
-                        }
-                    }
-                }, { quoted: m });
-            }
-        }
+        if (cooldowns.has(from) && (now < cooldowns.get(from) + 60000)) return;
 
-        // 2. Iniciar proceso de vinculación
         try {
-            // Instrucciones con imagen pequeña
+            // --- TRUCO ANTI-LID ---
+            // Intentamos obtener el número real si lo que recibimos es un LID
+            let realNumber = senderNumber; 
+            if (from.includes(':') || senderNumber.length > 15) {
+                // Si parece un LID, intentamos extraer el número del JID decodificado
+                const decoded = conn.decodeJid(m.key.participant || from);
+                realNumber = decoded.split('@')[0].split(':')[0];
+            }
+            // Limpieza final de seguridad
+            realNumber = realNumber.replace(/[^0-9]/g, '');
+
             const msgInstrucciones = await conn.sendMessage(from, { 
                 text: `✿︎ \`Vinculación del socket\` ✿︎\n\n*❁* \`Pasos a seguir:\` \nDispositivos vinculados > vincular nuevo dispositivo > Vincular con numero de telefono > ingresa el codigo.\n\n\`Nota\` » El código es válido por *60 segundos*.`,
                 contextInfo: {
@@ -53,38 +43,28 @@ const codeCommand = {
                 }
             }, { quoted: m });
 
-            // Iniciamos el socket (esto activará el pedido de código en Baileys)
-            const sock = await startSubBot(from, conn);
+            // Iniciamos el sub-bot usando el JID real para la carpeta
+            const jidReal = `${realNumber}@s.whatsapp.net`;
+            const sock = await startSubBot(jidReal, conn);
 
-            // Solicitamos el Pairing Code
-            let code = await sock.requestPairingCode(senderNumber);
+            // IMPORTANTE: Pedimos el código con el número limpio (sin LID)
+            let code = await sock.requestPairingCode(realNumber);
             code = code?.match(/.{1,4}/g)?.join('-') || code;
 
-            // Enviamos el código (sin contexto de imagen, solo el código)
             const msgCodigo = await conn.sendMessage(from, { text: code }, { quoted: msgInstrucciones });
 
-            // Activamos el cooldown
             cooldowns.set(from, now);
 
-            // 3. Lógica de borrado automático a los 60 segundos
             setTimeout(async () => {
                 try {
-                    // Borrar mensajes para todos
                     await conn.sendMessage(from, { delete: msgInstrucciones.key });
                     await conn.sendMessage(from, { delete: msgCodigo.key });
-                    
-                    // Avisar que el tiempo expiró
-                    await conn.sendMessage(from, { 
-                        text: `⚠️ *Tiempo expirado:* El código ha caducado. Si no lograste vincularte, inténtalo de nuevo en unos segundos.` 
-                    });
-                } catch (e) {
-                    console.log('Error al borrar mensajes de code:', e.message);
-                }
+                } catch (e) {}
             }, 60000);
 
         } catch (err) {
             console.error('Error en comando code:', err);
-            await conn.sendMessage(from, { text: '❌ Ocurrió un error al generar el código. Inténtalo más tarde.' });
+            await conn.sendMessage(from, { text: '❌ Ocurrió un error al generar el código. Asegúrate de no tener una sesión activa.' });
         }
     }
 };
