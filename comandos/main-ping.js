@@ -1,3 +1,8 @@
+/* Código creado por Félix Ofc 
+por favor y no quites los créditos.
+https://github.com/Dev-FelixOfc 
+*/
+
 import { config } from '../config.js';
 
 const pingCommand = {
