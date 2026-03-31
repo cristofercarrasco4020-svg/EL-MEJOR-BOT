@@ -14,7 +14,7 @@ const updateCommand = {
     alias: ['actualizar', 'gitpull', 'up'],
     category: 'tools',
     isOwner: true, 
-    noPrefix, true,
+    noPrefix: true,
     isGroup: false,
 
     run: async (conn, m) => {
