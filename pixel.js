@@ -1,20 +1,22 @@
-/* KURAYAMI - PIXEL HANDLER ENGINE 
-   Desarrollado por Félix OFC
-   Sistema de Procesamiento de Mensajes y Normalización LID
+/* KURAYAMI TEAM - PIXEL HANDLER ENGINE 
+   Desarrollado por Félix OFC para Kamuza Mister Bot
 */
 
 import chalk from 'chalk';
 import { config } from './config.js';
 import { logger } from './config/print.js';
-import { syncLid } from './lid/resolver.js'; 
+import { syncLid } from './lid/resolver.js'; // Motor LID de Kurayami
 
+/**
+ * Handler principal para procesar mensajes entrantes
+ */
 export const pixelHandler = async (conn, m) => {
     try {
-        if (!m.message) return;
+        if (!m || !m.message) return;
         if (m.key && m.key.remoteJid === 'status@broadcast') return;
 
         // 1. --- NORMALIZACIÓN DE IDENTIDAD (LID ENGINE) ---
-        // Esto traduce los IDs raros de WhatsApp a números de teléfono reales
+        // Sincroniza el ID antes de cualquier validación de mando
         m.sender = await syncLid(conn, m, m.chat);
 
         // 2. Extracción de cuerpo del mensaje
@@ -26,14 +28,18 @@ export const pixelHandler = async (conn, m) => {
                      (type === 'listResponseMessage') ? m.message.listResponseMessage.singleSelectReply.selectedRowId : '';
 
         // 3. Variables de entorno del mensaje
-        const prefix = config.prefix;
+        const prefix = config.prefix || '!'; 
         const isCmd = body.startsWith(prefix);
         const command = isCmd ? body.slice(prefix.length).trim().split(/ +/).shift().toLowerCase() : '';
         const args = body.trim().split(/ +/).slice(1);
         const text = args.join(' ');
         
-        // 4. Validaciones de Usuario (Ahora seguras con LID Resolver)
-        const isOwner = [conn.user.id.split(':')[0], ...config.ownerNumbers].some(num => m.sender.includes(num));
+        // 4. --- VALIDACIÓN DE DUEÑOS (Ajustado a tu config.owner) ---
+        // Extraemos los números del array 'owner' en tu config.js
+        const owners = Array.isArray(config.owner) ? config.owner : [];
+        
+        // Comprobamos si el sender (ya limpio por syncLid) es el dueño
+        const isOwner = [conn.user.id.split(':')[0], ...owners].some(num => m.sender.includes(num));
         const isGroup = m.chat.endsWith('@g.us');
         
         // 5. Registro en consola (Logger)
@@ -45,16 +51,16 @@ export const pixelHandler = async (conn, m) => {
                         Array.from(global.commands.values()).find(c => c.alias && c.alias.includes(command));
 
             if (cmd) {
-                // Validación de permisos
+                // Validación de jerarquía
                 if (cmd.isOwner && !isOwner) {
-                    return m.reply('❌ Este comando es exclusivo para mi desarrollador.');
+                    return m.reply('❌ Nivel de acceso insuficiente: Solo el Desarrollador puede ejecutar esto.');
                 }
 
                 if (cmd.isGroup && !isGroup) {
-                    return m.reply('❌ Este comando solo puede ser usado en grupos.');
+                    return m.reply('❌ Error: Este comando requiere un entorno de grupo.');
                 }
 
-                // Ejecución del comando
+                // Inyección de parámetros al comando
                 await cmd.run(conn, m, { 
                     prefix, 
                     command, 
@@ -67,6 +73,6 @@ export const pixelHandler = async (conn, m) => {
         }
 
     } catch (err) {
-        console.error(chalk.red('\n[❌] ERROR EN PIXEL HANDLER:'), err);
+        console.error(chalk.red('\n[❌] CRITICAL ERROR EN PIXEL HANDLER:'), err);
     }
 };
