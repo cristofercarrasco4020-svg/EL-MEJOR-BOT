@@ -12,6 +12,7 @@ const menuCommand = {
     alias: ['help', 'menú', 'ayuda', 'menu'],
     category: 'main',
     isOwner: false,
+    noPrefix: true,
     isAdmin: false,
     isGroup: false,
 
