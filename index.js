@@ -52,9 +52,7 @@ global.loadCommands = async () => {
 };
 
 async function startBot() {
-    // Si hay una sesión corrupta (la que dio el error de código), la borramos antes de empezar
     const sessionDir = './sesion_bot';
-    
     const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
     const { version } = await fetchLatestBaileysVersion();
 
@@ -77,7 +75,6 @@ async function startBot() {
             creds: state.creds,
             keys: makeCacheableSignalKeyStore(state.keys, P({ level: 'silent' })),
         },
-        // Mantenemos Browsers.ubuntu('Chrome') que es el que te funcionaba bien
         browser: Browsers.ubuntu('Chrome'),
         markOnlineOnConnect: true,
     });
@@ -100,19 +97,22 @@ async function startBot() {
 
         console.log(chalk.blue('\n  [⏳] Solicitando código a WhatsApp...'));
 
-        // Reducimos el tiempo de espera a 2 segundos para evitar desincronización
         setTimeout(async () => {
             try {
                 let code = await conn.requestPairingCode(phoneNumber);
                 code = code?.match(/.{1,4}/g)?.join('-') || code;
-                console.log('\n  ' + chalk.bgCyan.black.bold(` CÓDIGO: ${code} `) + '\n');
+                
+                // --- DISEÑO DE CÓDIGO RESALTADO (NEGRO SOBRE CYAN) ---
+                console.log('\n' + chalk.black.bgCyan('  ╔══════════════════════════════════════╗  '));
+                console.log(chalk.black.bgCyan(`  ║          CODIGO: ${code}          ║  `));
+                console.log(chalk.black.bgCyan('  ╚══════════════════════════════════════╝  ') + '\n');
+                
             } catch (error) {
-                console.error(chalk.red('  [!] Error al solicitar código:'), error);
-                // Si falla aquí, probablemente la sesión está corrupta. Borramos y reiniciamos.
+                console.error(chalk.red('  [!] Error:'), error);
                 if (fs.existsSync(sessionDir)) fs.rmSync(sessionDir, { recursive: true, force: true });
                 process.exit(1);
             }
-        }, 2000);
+        }, 2500);
     }
 
     conn.ev.on('creds.update', saveCreds);
@@ -128,8 +128,8 @@ async function startBot() {
                 console.log(chalk.red.bold('  │       SESIÓN CERRADA / INVALIDADA        │'));
                 console.log(chalk.red.bold('  └──────────────────────────────────────────┘'));
                 if (fs.existsSync(sessionDir)) fs.rmSync(sessionDir, { recursive: true, force: true });
-                console.log(chalk.white('  [✓] Sesión borrada automáticamente. Reiniciando...\n'));
-                startBot();
+                console.log(chalk.white('  [✓] Sesión borrada. Reinicia para vincular.\n'));
+                process.exit(0);
             } else {
                 console.log(chalk.yellow('  [!] Conexión perdida... reintentando.'));
                 startBot();
