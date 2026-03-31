@@ -17,7 +17,7 @@ export default {
             const sessionsPath = path.resolve('./sesiones_subbots');
             
             let totalSubs = 0;
-            let listaBots = `   ➪ https://wa.me/${mainNumber} » (Principal)\n`;
+            let listaBots = `  ➪ *[https://wa.me/${mainNumber}]* » *Mood*\n`;
 
             if (fs.existsSync(sessionsPath)) {
                 const folders = fs.readdirSync(sessionsPath).filter(f => {
@@ -30,12 +30,12 @@ export default {
                 folders.forEach(folder => {
                     const num = folder.replace(/\D/g, '');
                     if (num && num !== mainNumber) {
-                        listaBots += `   ➪ *[https://wa.me/${num}]* » *Sub-Bot*\n`;
+                        listaBots += `  ➪ *[https://wa.me/${num}]* » *Sub-Bot*\n`;
                     }
                 });
             }
 
-            const texto = `✿︎ \`LISTA DE BOTS ACTIVOS\` ✿︎\n\n*❁ Principal » 1*\n*❀ Subs Totales » ${totalSubs}*\n\n*📊 LISTA DETALLADA:*\n${listaBots}`;
+            const texto = `✿︎ \`LISTA DE BOTS ACTIVOS\` ✿︎\n\n*❁ Principal » 1*\n*❀ Subs Totales » ${totalSubs}*\n\n*❀ LISTA DETALLADA:*\n${listaBots}`;
 
             await conn.sendMessage(m.chat || m.key.remoteJid, { 
                 text: texto.trim(),
