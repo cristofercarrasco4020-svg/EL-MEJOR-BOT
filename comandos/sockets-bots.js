@@ -9,6 +9,8 @@ export default {
     name: 'sockets',
     alias: ['sockets', 'bots'],
     category: 'sockets',
+    noPrefix: true,
+
     run: async (conn, m) => {
         try {
             const mainNumber = conn.user.id.split(':')[0];
