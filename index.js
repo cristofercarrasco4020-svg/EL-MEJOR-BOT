@@ -1,3 +1,8 @@
+/* KURAYAMI TEAM - INDEX ENGINE 
+   Desarrollado por Félix OFC para Kamuza Mister Bot
+   MOD: Validación de vinculación anti-spam
+*/
+
 import { 
     makeWASocket, 
     useMultiFileAuthState, 
@@ -28,7 +33,6 @@ const question = (text) => new Promise((resolve) => rl.question(text, resolve));
 global.commands = new Map();
 global.totalCommandsUsed = 0; 
 
-// --- CARGA DE COMANDOS ESTÉTICA ---
 global.loadCommands = async () => {
     process.stdout.write(chalk.cyan('  [⚙️] Cargando módulos de comandos... '));
     const commandsPath = path.resolve(__dirname, 'comandos');
@@ -56,7 +60,6 @@ async function startBot() {
     const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
     const { version } = await fetchLatestBaileysVersion();
 
-    // BANNER INICIAL
     process.stdout.write('\x1Bc');
     CFonts.say('KAZUMA', { 
         font: 'block', align: 'center', colors: ['cyan', 'magenta'], background: 'transparent', letterSpacing: 1 
@@ -81,38 +84,51 @@ async function startBot() {
 
     await global.loadCommands();
 
-    // VINCULACIÓN ESTÉTICA
     if (!conn.authState.creds.registered) {
         console.log(chalk.yellow('\n  ╔══════════════════════════════════════════╗'));
         console.log(chalk.yellow('  ║    VINCULACIÓN DEL BOT PRINCIPAL         ║'));
         console.log(chalk.yellow('  ╚══════════════════════════════════════════╝'));
 
-        let phoneNumber = await question(chalk.cyan('\n  [?] Introduce tu número (ej: 1849XXXXXXX):\n  > '));
-        phoneNumber = phoneNumber.replace(/[^0-9]/g, '');
+        let phoneNumber = "";
+        let isValid = false;
 
-        if (!phoneNumber) {
-            console.log(chalk.red('\n  [!] ERROR: Número no válido. Reinicia el panel.'));
-            process.exit(0);
+        // --- BUCLE DE VALIDACIÓN ---
+        while (!isValid) {
+            let input = await question(chalk.cyan('\n  [?] Introduce tu número (ej: 1849XXXXXXX):\n  > '));
+            phoneNumber = input.replace(/[^0-9]/g, '');
+
+            if (!phoneNumber || phoneNumber.length < 10) {
+                console.log(chalk.red('  [!] ERROR: El número es demasiado corto o inválido.'));
+                console.log(chalk.gray('      Asegúrate de incluir el código de país (ej: 57, 1, 507).'));
+            } else if (phoneNumber.length > 15) {
+                console.log(chalk.red('  [!] ERROR: El número es demasiado largo.'));
+            } else {
+                // Validación de códigos específicos (ejemplo USA +1)
+                if (phoneNumber.startsWith('1') && phoneNumber.length !== 11) {
+                    console.log(chalk.yellow('  [!] AVISO: Los números de USA/Canadá deben tener 11 dígitos (1 + 10 dígitos).'));
+                    continue; 
+                }
+                isValid = true; 
+            }
         }
 
-        console.log(chalk.blue('\n  [⏳] Solicitando código a WhatsApp...'));
+        console.log(chalk.blue('\n  [⏳] Solicitando código para: ') + chalk.white(phoneNumber));
 
         setTimeout(async () => {
             try {
                 let code = await conn.requestPairingCode(phoneNumber);
                 code = code?.match(/.{1,4}/g)?.join('-') || code;
-                
-                // --- DISEÑO DE CÓDIGO RESALTADO (NEGRO SOBRE CYAN) ---
+
                 console.log('\n' + chalk.black.bgCyan('  ╔══════════════════════════════════════╗  '));
                 console.log(chalk.black.bgCyan(`  ║          CODIGO: ${code}          ║  `));
                 console.log(chalk.black.bgCyan('  ╚══════════════════════════════════════╝  ') + '\n');
-                
+
             } catch (error) {
-                console.error(chalk.red('  [!] Error:'), error);
+                console.error(chalk.red('  [!] Error de Baileys:'), error.message);
                 if (fs.existsSync(sessionDir)) fs.rmSync(sessionDir, { recursive: true, force: true });
                 process.exit(1);
             }
-        }, 2500);
+        }, 2000);
     }
 
     conn.ev.on('creds.update', saveCreds);
@@ -122,13 +138,11 @@ async function startBot() {
 
         if (connection === 'close') {
             const isLoggedOut = lastDisconnect.error?.output?.statusCode === DisconnectReason.loggedOut;
-
             if (isLoggedOut) {
                 console.log(chalk.red.bold('\n  ┌──────────────────────────────────────────┐'));
                 console.log(chalk.red.bold('  │       SESIÓN CERRADA / INVALIDADA        │'));
                 console.log(chalk.red.bold('  └──────────────────────────────────────────┘'));
                 if (fs.existsSync(sessionDir)) fs.rmSync(sessionDir, { recursive: true, force: true });
-                console.log(chalk.white('  [✓] Sesión borrada. Reinicia para vincular.\n'));
                 process.exit(0);
             } else {
                 console.log(chalk.yellow('  [!] Conexión perdida... reintentando.'));
