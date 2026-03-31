@@ -39,6 +39,14 @@ const menuCommand = {
 *✿︎ ${prefix}botinfo • ${prefix}infobot*
 > ❀ Mira información detallada del sistema operativo del bot.
 
+
+*» (❍ᴥ❍ʋ) \`SOCKETS\` «*
+*✿︎ ${prefix}code
+> ❀ Hazte SubBot de Kazuma.
+*✿︎ ${prefix}bots • ${prefix}sockets*
+> ❀ Mira la lista de sockets activos.
+
+
 *» (❍ᴥ❍ʋ) \`OWNER\` «*
 *✿︎ ${prefix}up • ${prefix}update • ${prefix}getpull*
 > ❀ Actualiza el servidor a lo archivos actuales del repositorio git.`;
