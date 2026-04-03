@@ -1,44 +1,126 @@
-const axios = require('axios');
-const { MessageEmbed } = require('discord.js');
+/* Código creado por Félix Ofc 
+por favor no quites los créditos.
+https://github.com/Dev-FelixOfc 
+*/
 
-module.exports = {
+import { config } from '../config.js';
+import axios from 'axios';
+
+const ytsearchCommand = {
     name: 'ytsearch',
-    description: 'Search for a YouTube video and download it as MP3.',
-    async execute(message, args) {
+    alias: ['yt', 'youtube', 'musica'],
+    category: 'descargas',
+    isOwner: false,
+    noPrefix: false,
+    isAdmin: false,
+    isGroup: true,
+
+    run: async (conn, m, args) => {
+        const from = m.key.remoteJid;
         const text = args.join(' ');
+
         if (!text) {
-            return message.reply('Please provide a search term.');
+            return await conn.sendMessage(from, { 
+                text: '❌ *Por favor ingresa el nombre de la canción o video*\n\n📝 *Uso:* .ytsearch Nombre del Video',
+                contextInfo: {
+                    externalAdReply: {
+                        title: 'KAZUMA - YouTube Search',
+                        body: 'Búsqueda de YouTube',
+                        thumbnailUrl: 'https://files.catbox.moe/9ssbf9.jpg', 
+                        sourceUrl: 'https://panel.kurayamihost.ooguy.com',
+                        mediaType: 1,
+                        renderLargerThumbnail: false,
+                        showAdAttribution: false
+                    }
+                }
+            }, { quoted: m });
         }
 
         try {
-            // Search for the YouTube video using the Stellar API
+            // Mostrar que está buscando
+            await conn.sendMessage(from, { 
+                text: '🔍 *Buscando en YouTube...*',
+                contextInfo: {
+                    externalAdReply: {
+                        title: 'KAZUMA - Buscando',
+                        body: 'Procesando búsqueda',
+                        thumbnailUrl: 'https://files.catbox.moe/9ssbf9.jpg', 
+                        sourceUrl: 'https://panel.kurayamihost.ooguy.com',
+                        mediaType: 1,
+                        renderLargerThumbnail: false,
+                        showAdAttribution: false
+                    }
+                }
+            }, { quoted: m });
+
+            // Buscar en YouTube usando la API de Stellar
             const response = await axios.get(`https://api.stellarwa.xyz/search/yt?query=${encodeURIComponent(text)}&key=api-Bb1JX`);
-            const results = response.data.results;
+            const results = response.data.results || [];
             
             if (results.length === 0) {
-                return message.reply('No results found.');
+                return await conn.sendMessage(from, { 
+                    text: '❌ *No se encontraron resultados para tu búsqueda*',
+                    contextInfo: {
+                        externalAdReply: {
+                            title: 'KAZUMA - Sin Resultados',
+                            body: 'Intenta con otro término',
+                            thumbnailUrl: 'https://files.catbox.moe/9ssbf9.jpg', 
+                            sourceUrl: 'https://panel.kurayamihost.ooguy.com',
+                            mediaType: 1,
+                            renderLargerThumbnail: false,
+                            showAdAttribution: false
+                        }
+                    }
+                }, { quoted: m });
             }
 
-            // Format the results and show them
-            const embed = new MessageEmbed()
-                .setColor('#FF0000')
-                .setTitle('YouTube Search Results')
-                .setDescription('Here are the results:');
+            // Tomar el primer resultado
+            const video = results[0];
+            const thumbnail = video.thumbnail || 'https://files.catbox.moe/9ssbf9.jpg';
 
-            results.forEach(video => {
-                embed.addField(video.title, `[Watch Here](${video.url})`, false);
-                embed.setThumbnail(video.thumbnail);
-            });
+            // Crear mensaje con la información del video
+            let messageText = `🎵 *RESULTADO DE BÚSQUEDA*\n\n`;
+            messageText += `*Título:* ${video.title}\n`;
+            messageText += `*Canal:* ${video.channel || 'No disponible'}\n`;
+            messageText += `*Duración:* ${video.duration || 'No disponible'}\n`;
+            messageText += `*Visualizaciones:* ${video.views || 'No disponible'}\n\n`;
+            messageText += `🔗 _Link:_ ${video.url}\n\n`;
+            messageText += `💿 *Para descargar como MP3:*\n`;
+            messageText += `_.mp3 ${video.url}_`;
 
-            message.channel.send({ embeds: [embed] });
-            
-            // Now you can implement the MP3 download link according to your requirement
-            // This is a placeholder for the actual download command
-            // Example: `message.channel.send('Click [here](YOUR_MP3_DOWNLOAD_URL) to download the MP3');`
+            await conn.sendMessage(from, { 
+                text: messageText,
+                contextInfo: {
+                    externalAdReply: {
+                        title: 'KAZUMA - YouTube Download',
+                        body: video.title.substring(0, 50),
+                        thumbnailUrl: thumbnail, 
+                        sourceUrl: video.url,
+                        mediaType: 1,
+                        renderLargerThumbnail: false,
+                        showAdAttribution: false
+                    }
+                }
+            }, { quoted: m });
 
-        } catch (error) {
-            console.error(error);
-            return message.reply('An error occurred while searching. Please try again later.');
+        } catch (err) {
+            console.error('Error en comando ytsearch:', err);
+            await conn.sendMessage(from, { 
+                text: '❌ *Error al buscar en YouTube*\n\nIntenta más tarde.',
+                contextInfo: {
+                    externalAdReply: {
+                        title: 'KAZUMA - Error',
+                        body: 'Ocurrió un error',
+                        thumbnailUrl: 'https://files.catbox.moe/9ssbf9.jpg', 
+                        sourceUrl: 'https://panel.kurayamihost.ooguy.com',
+                        mediaType: 1,
+                        renderLargerThumbnail: false,
+                        showAdAttribution: false
+                    }
+                }
+            }, { quoted: m });
         }
     }
 };
+
+export default ytsearchCommand;
