@@ -1,9 +1,13 @@
-/* KURAYAMI TEAM - PIXEL HANDLER (ULTIMATE FIX) */
+/* KURAYAMI TEAM - PIXEL HANDLER (DEBUG MODE) */
 
 import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
 import { logger } from './config/print.js';
+
+// Usamos una ruta absoluta para que no haya pérdida entre procesos
+const databasePath = path.join(process.cwd(), 'jsons', 'preferencias.json');
+const sessionsPath = path.join(process.cwd(), 'sesiones_subbots');
 
 export const pixelHandler = async (conn, m, config) => {
     try {
@@ -30,13 +34,9 @@ export const pixelHandler = async (conn, m, config) => {
             ? body.slice(usedPrefix.length).trim().split(/ +/).shift().toLowerCase()
             : body.trim().split(/ +/).shift().toLowerCase();
 
-        // --- LÓGICA DE BOT PRIMARIO (FILTRO DE EJECUCIÓN) ---
+        // --- LÓGICA DE BOT PRIMARIO ---
         if (isGroup && commandName !== 'setprimary') {
-            const databasePath = path.resolve('./jsons/preferencias.json');
-            const sessionsPath = path.resolve('./sesiones_subbots');
-            
-            // Obtenemos mi número de forma segura (limpiando JID y dispositivos)
-            const myJid = conn.user.id.split(':')[0].split('@')[0];
+            const myJid = conn.user.id.split(':')[0].replace(/[^0-9]/g, '');
 
             if (fs.existsSync(databasePath)) {
                 let db = JSON.parse(fs.readFileSync(databasePath, 'utf-8'));
@@ -44,15 +44,17 @@ export const pixelHandler = async (conn, m, config) => {
                 if (db[chat]) {
                     const primaryNumber = db[chat].replace(/[^0-9]/g, '');
                     
-                    // Verificamos si el primario sigue activo (carpeta existe o es el principal)
-                    const isSubbotActive = fs.existsSync(path.join(sessionsPath, primaryNumber));
-                    const isMainActive = true; // El principal siempre se considera activo si está corriendo el pixel
+                    // Verificación de actividad
+                    const isSubActive = fs.existsSync(path.join(sessionsPath, primaryNumber));
+                    const isMainActive = true; 
 
-                    if (isSubbotActive || primaryNumber === myJid) {
-                        // SI NO SOY EL ELEGIDO, ME QUEDO CALLADO
-                        if (myJid !== primaryNumber) return; 
+                    if (isSubActive || primaryNumber === myJid) {
+                        if (myJid !== primaryNumber) {
+                            // LOG PARA DEPURACIÓN: Descomenta la línea de abajo si quieres ver quién se calla en la consola
+                            // console.log(chalk.blue(`[SILENCIO] Bot ${myJid} se calla porque el primario es ${primaryNumber}`));
+                            return; 
+                        }
                     } else {
-                        // Si el bot elegido ya no existe, liberamos el grupo
                         delete db[chat];
                         fs.writeFileSync(databasePath, JSON.stringify(db, null, 2));
                     }
@@ -67,7 +69,6 @@ export const pixelHandler = async (conn, m, config) => {
                     Array.from(global.commands.values()).find(c => c.alias && c.alias.includes(commandName));
 
         if (!cmd) return;
-
         if (!usedPrefix && !cmd.noPrefix) return;
         if (!isGroup && !isOwner && commandName !== 'code') return;
 
