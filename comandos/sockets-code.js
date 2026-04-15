@@ -16,7 +16,6 @@ const codeCommand = {
 
     run: async (conn, m, args, prefix) => {
         const from = m.key.remoteJid;
-        const sender = m.sender || m.key.participant || from;
 
         const sessionsPath = path.resolve('./sesiones_subbots');
         if (fs.existsSync(sessionsPath)) {
@@ -72,10 +71,8 @@ const codeCommand = {
             sock.ev.on('connection.update', async (update) => {
                 const { connection } = update;
                 if (connection === 'open') {
-                    const mentionJid = [sender];
                     await conn.sendMessage(from, { 
-                        text: `*[❁]* Conexión Socket exitosa.\n@${sender.split('@')[0]}\n\n> ¡Disfruta del Bot, pronto añadiremos más cosas!`,
-                        mentions: mentionJid
+                        text: `*[❁]* Conexión Socket exitosa.\nNúmero: ${targetNumber}\n\n> ¡Disfruta del Bot, pronto añadiremos más cosas!`,
                     }, { quoted: m }); 
                 }
             });
