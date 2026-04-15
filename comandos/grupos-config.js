@@ -1,64 +1,50 @@
 import fs from 'fs';
 import path from 'path';
 
-const jsonDir = path.resolve('./jsons');
-const databasePath = path.join(jsonDir, 'grupos.json');
+const databasePath = path.resolve('./jsons/grupos.json');
 
 const configOnOff = {
-    name: 'config',
-    alias: ['enable', 'disable', 'on', 'off', 'detect'],
+    command: ['detect', 'alerts', 'alertas'], // Puedes añadir más aquí luego
     category: 'grupo',
-    isOwner: false,
-    noPrefix: true,
     isAdmin: true,
     isGroup: true,
 
-    run: async (conn, m, args, usedPrefix, commandName) => {
+    run: async (conn, m, args, usedPrefix, command) => {
         const from = m.key.remoteJid;
+        const stateArg = args[0]?.toLowerCase();
+        const validStates = ['on', 'off', 'enable', 'disable'];
 
-        // Si el comando fue directo (ej: #detect), la función es 'detect'
-        // Si se usó #config detect, la función es el primer argumento
-        const feature = (commandName === 'config' || commandName === 'enable' || commandName === 'disable' || commandName === 'on' || commandName === 'off') 
-            ? args[0]?.toLowerCase() 
-            : commandName;
+        // Mapeo de nombres para el JSON y para el texto
+        const featureKey = 'detect'; // Por ahora solo manejamos detect
+        const featureName = 'las *Alertas de Grupo*';
 
-        // Determinamos la acción (on/off)
-        let action = '';
-        if (['on', 'enable', 'off', 'disable'].includes(commandName)) {
-            action = commandName;
-        } else {
-            action = args[1]?.toLowerCase() || args[0]?.toLowerCase();
-        }
-
-        // Lista de funciones soportadas (iremos ampliando aquí)
-        const validFeatures = ['detect']; 
-        
-        if (!feature || !validFeatures.includes(feature)) {
-            return await conn.sendMessage(from, { 
-                text: `*❁* \`Configuración de Grupo\` *❁*\n\nDebes especificar una función válida para configurar.\n\n*✿︎ Funciones disponibles:* \`${validFeatures.join(', ')}\`\n\n> Ejemplo: *#${validFeatures[0]} on*` 
-            }, { quoted: m });
-        }
-
-        if (!action || !['on', 'off', 'enable', 'disable'].includes(action)) {
-            return await conn.sendMessage(from, { 
-                text: `*❁* \`Estado Faltante\` *❁*\n\n¿Qué deseas hacer con la función *${feature}*?\n\n*✿︎ Opciones:* \`on / off\`\n\n> Ejemplo: *#${feature} on*` 
-            }, { quoted: m });
-        }
-
-        const isEnable = ['on', 'enable'].includes(action);
-
-        // Manejo de Carpeta y JSON
-        if (!fs.existsSync(jsonDir)) fs.mkdirSync(jsonDir, { recursive: true });
+        if (!fs.existsSync(path.resolve('./jsons'))) fs.mkdirSync(path.resolve('./jsons'));
         let db = fs.existsSync(databasePath) ? JSON.parse(fs.readFileSync(databasePath, 'utf-8')) : {};
-
         if (!db[from]) db[from] = {};
-        db[from][feature] = isEnable;
 
+        const current = db[from][featureKey] === true;
+        const estadoActual = current ? '✓ Activado' : '✗ Desactivado';
+
+        if (!stateArg) {
+            return conn.sendMessage(from, { 
+                text: `*✿︎ Configuración (✿❛◡❛)*\n\nꕥ Un administrador puede activar o desactivar ${featureName} utilizando:\n\n● _Habilitar ›_ *${usedPrefix + command} on*\n● _Deshabilitar ›_ *${usedPrefix + command} off*\n\n❒ *Estado actual ›* ${estadoActual}` 
+            }, { quoted: m });
+        }
+
+        if (!validStates.includes(stateArg)) {
+            return m.reply(`*❁* \`Estado no válido\` *❁*\n\nUsa *on / off*.\nEjemplo: *${usedPrefix + command} on*`);
+        }
+
+        const enabled = ['on', 'enable'].includes(stateArg);
+
+        if (db[from][featureKey] === enabled) {
+            return m.reply(`*✎* ${featureName} ya estaba *${enabled ? 'activado' : 'desactivado'}*.`);
+        }
+
+        db[from][featureKey] = enabled;
         fs.writeFileSync(databasePath, JSON.stringify(db, null, 2));
 
-        await conn.sendMessage(from, { 
-            text: `*✿︎* \`Ajuste Actualizado\` *✿︎*\n\nLa función *${feature.toUpperCase()}* ha sido **${isEnable ? 'ACTIVADA' : 'DESACTIVADA'}** con éxito.\n\n> ¡El sistema Kazuma ahora está en modo ${isEnable ? 'vigilante' : 'reposo'}!` 
-        }, { quoted: m });
+        return m.reply(`*✿︎* Has *${enabled ? 'activado' : 'desactivado'}* ${featureName} con éxito.`);
     }
 };
 
