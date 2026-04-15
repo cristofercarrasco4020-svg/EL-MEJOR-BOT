@@ -6,7 +6,7 @@ export default {
     name: 'prueba',
     alias: ['test', 'verificar'],
     category: 'owner',
-    // Mantenemos esto por si el handler ayuda, pero la magia está abajo
+    noPrefix: true,
     isOwner: true, 
 
     run: async (conn, m) => {
