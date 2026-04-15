@@ -41,7 +41,7 @@ const configOnOff = {
 
         if (!action || !['on', 'off', 'enable', 'disable'].includes(action)) {
             return await conn.sendMessage(from, { 
-                text: `*❁* \`Estado Faltante\` *❁*\n\n¿Qué deseas hacer con la función *${feature}*?\n\n*✿︎ Opciones:* \`on / off\`\n\n> Ejemplo: *${Prefix}${feature} on*` 
+                text: `*❁* \`Estado Faltante\` *❁*\n\n¿Qué deseas hacer con la función *${feature}*?\n\n*✿︎ Opciones:* \`on / off\`\n\n> Ejemplo: *#${feature} on*` 
             }, { quoted: m });
         }
 
