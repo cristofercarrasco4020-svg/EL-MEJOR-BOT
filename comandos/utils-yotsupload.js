@@ -1,73 +1,87 @@
-/* KAZUMA MISTER BOT - YOTSUBA UPLOAD (FULL STYLE) 
+/* KAZUMA MISTER BOT - YOTSUBA UPLOAD SYSTEM
    Desarrollado por Félix OFC
 */
-import fetch from 'node-fetch';
-import FormData from 'form-data';
+import axios from "axios"
+import FormData from "form-data"
 
-const yotsubaUploadCommand = {
-    name: 'upload',
-    alias: ['tourl', 'yupload', 'toimg'],
-    category: 'utils',
-    noPrefix: true,
+// Función para el peso del archivo (Estética limpia)
+function formatBytes(bytes) {
+  if (bytes === 0) return "0 B"
+  const sizes = ["B", "KB", "MB", "GB", "TB"]
+  const i = Math.floor(Math.log(bytes) / Math.log(1024))
+  return `${(bytes / 1024 ** i).toFixed(2)} ${sizes[i]}`
+}
 
-    run: async (conn, m, args, usedPrefix, commandName) => {
-        // 1. DETECCIÓN MEJORADA DE MULTIMEDIA
-        // Buscamos el mensaje real, ya sea el actual o al que estás respondiendo
-        const quoted = m.quoted ? m.quoted : m;
-        
-        // Esta línea es la clave para que no te diga "Falta Archivo"
-        const mime = (quoted.msg || quoted).mimetype || quoted.mediaType || '';
+// Generador de nombres para tu API
+function generateUniqueFilename(mime) {
+  const ext = mime.split("/")[1] || "bin"
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+  let id = Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join("")
+  return `${id}.${ext}`
+}
 
-        if (!/image|video|webp/.test(mime)) {
-            return m.reply(`*❁* \`Falta Archivo\` *❁*\n\nResponde a una imagen o video corto para convertirlo en enlace.\n\n> Ejemplo: Envía una imagen y pon *${usedPrefix}${commandName}*`);
-        }
+// --- FUNCIÓN PARA TU API PRIVADA ---
+async function uploadYotsuba(buffer, mime) {
+  const form = new FormData()
+  // Importante: Tu servidor usa el campo 'file'
+  form.append("file", buffer, { 
+    filename: generateUniqueFilename(mime),
+    contentType: mime 
+  })
 
-        try {
-            // 2. PRIMER AVISO
-            await m.reply(`*✿︎* \`Subiendo Archivo\` *✿︎*\n\nKazuma está enviando el archivo a Yotsuba Cloud. Por favor, espera...\n\n> ⏳ Conectando con tu API privada...`);
+  const res = await axios.post("https://upload.yotsuba.giize.com/upload", form, {
+    headers: form.getHeaders(),
+    maxContentLength: Infinity,
+    maxBodyLength: Infinity
+  })
 
-            // 3. DESCARGA Y PREPARACIÓN (Igual a la lógica del scraper de tu amigo)
-            const media = await quoted.download();
-            const formData = new FormData();
-            
-            // Usamos el campo 'file' que es el que espera tu servidor según la foto del código
-            formData.append('file', media, { 
-                filename: `kazuma_${Date.now()}.${mime.split('/')[1]}`,
-                contentType: mime 
-            });
+  // Leemos 'fileUrl' que es lo que devuelve tu Fastify
+  const url = res.data?.fileUrl || res.data?.url
+  if (!url) throw new Error("API Yotsuba no devolvió URL")
+  return url
+}
 
-            // 4. SOLICITUD A TU HOSTING
-            const res = await fetch('https://upload.yotsuba.giize.com/upload', {
-                method: 'POST',
-                body: formData,
-                headers: formData.getHeaders()
-            });
+export default {
+  command: ["upload", "tourl", "yupload"],
+  category: "utils",
+  run: async (client, m, args, usedPrefix, command) => {
+    // La clave de la detección:
+    const q = m.quoted || m
+    const mime = (q.msg || q).mimetype || q.mediaType || ""
 
-            const data = await res.json();
+    if (!mime || !/image|video|webp/.test(mime)) {
+      return m.reply(
+        `*❁* \`Falta Archivo\` *❁*\n\n` +
+        `Responde a una imagen o video corto para convertirlo en enlace.\n\n` +
+        `> Ejemplo: Envía una imagen y pon *${usedPrefix + command}*`
+      )
+    }
 
-            // 5. VERIFICACIÓN DE RESPUESTA
-            if (!res.ok || (!data.fileUrl && !data.url)) {
-                return m.reply('*❁* `Error en Servidor` *❁*\n\nTu API no devolvió un enlace. Verifica que PM2 no tenga errores en el host.');
-            }
+    try {
+      // Aviso de proceso
+      await m.reply(`*✿︎* \`Subiendo Archivo\` *✿︎*\n\nKazuma está enviando el archivo a Yotsuba Cloud. Por favor, espera...\n\n> ⏳ Conectando con tu API privada...`)
 
-            const finalUrl = data.fileUrl || data.url;
+      const media = await q.download()
+      if (!media) return m.reply("*❁* `Error` *❁*\n\nNo se pudo descargar el archivo de WhatsApp.")
 
-            // 6. MENSAJE FINAL (Estética Félix OFC)
-            const successText = `*» (❍ᴥ❍ʋ) \`YOTSUBA CLOUD\` «*
+      // Subida a tu servidor
+      const link = await uploadYotsuba(media, mime)
+
+      // --- MENSAJE FINAL ESTILO FÉLIX OFC ---
+      const successText = `*» (❍ᴥ❍ʋ) \`YOTSUBA CLOUD\` «*
 > ꕥ Archivo convertido con éxito.
 
-*✿︎ Enlace:* \`${finalUrl}\`
-*✿︎ Tipo:* \`${mime}\`
+*✿︎ Enlace:* \`${link}\`
+*✿︎ Peso:* \`${formatBytes(media.length)}\`
+*✿︎ Tipo:* \`${mime.split("/")[1].toUpperCase()}\`
 
-> ¡Recuerda que este enlace es público, compártelo con cuidado!`;
+> ¡Recuerda que este enlace es público, compártelo con cuidado!`
 
-            await conn.sendMessage(m.chat, { text: successText }, { quoted: m });
+      return m.reply(successText)
 
-        } catch (err) {
-            console.error('Error en Yotsuba Upload:', err);
-            m.reply('*❁* \`Error Crítico\` *❁*\n\nNo se pudo conectar con el servidor. Revisa si el host está activo.');
-        }
+    } catch (e) {
+      console.error(e)
+      await m.reply(`*❁* \`Error Crítico\` *❁*\n\nNo se pudo subir a Yotsuba. Revisa si el VPS está activo.\n\n> Error: ${e.message}`)
     }
-};
-
-export default yotsubaUploadCommand;
+  }
+}
