@@ -13,24 +13,24 @@ const yotsubaUploadCommand = {
     run: async (conn, m, args, usedPrefix, commandName) => {
         const quoted = m.quoted ? m.quoted : m;
 
-        const mime = quoted?.msg?.mimetype ||
-                     quoted?.mimetype ||
-                     quoted?.msg?.mediaType ||
-                     quoted?.mediaType ||
-                     m?.msg?.mimetype ||
-                     m?.mimetype ||
-                     m?.msg?.mediaType ||
-                     m?.mediaType ||
-                     m?.mtype || '';
+        const msgContent = quoted.message || m.message || {};
+        const mime =
+            msgContent.imageMessage?.mimetype ||
+            msgContent.videoMessage?.mimetype ||
+            msgContent.audioMessage?.mimetype ||
+            msgContent.stickerMessage?.mimetype ||
+            msgContent.documentMessage?.mimetype ||
+            quoted?.mimetype ||
+            m?.mimetype || '';
 
-        if (!/image|video|webp|audio|sticker/.test(mime)) {
+        if (!mime || !/image|video|webp|audio|sticker/.test(mime)) {
             return m.reply(`*❁* \`Falta Archivo\` *❁*\n\nResponde a una imagen o video corto para convertirlo en enlace.\n\n> Ejemplo: Envía una imagen y pon *${usedPrefix}${commandName}*`);
         }
 
         try {
             await m.reply(`*✿︎* \`Subiendo Archivo\` *✿︎*\n\nKazuma está enviando el archivo a Yotsuba Cloud. Por favor, espera...\n\n> ⏳ Conectando con tu API privada...`);
 
-            const media = await quoted.download();
+            const media = await conn.downloadMediaMessage(quoted);
             if (!media) return m.reply('*❁* `Error de Medios` *❁*\n\nNo se pudo descargar el archivo. Intenta de nuevo.');
 
             const formData = new FormData();
