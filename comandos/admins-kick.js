@@ -6,43 +6,51 @@ const kickCommand = {
     category: 'admin',
     admin: true, 
     botAdmin: true, 
+    isGroup: true,
     noPrefix: true,
 
-    run: async (conn, m, { args, text, participants, isGroup }) => {
-        if (!isGroup) return;
+    run: async (conn, m, { participants }) => {
+        if (!m.mentionedJid[0] && !m.quoted) {
+            return m.reply(`*${config.visuals.emoji2}* Etiqueta o responde al mensaje de la persona que quieres eliminar.`);
+        }
 
-        let victim = m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : false;
+        let victim = m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted.sender;
+        
+        const groupInfo = await conn.groupMetadata(m.chat);
+        const ownerGroup = groupInfo.owner || m.chat.split('-')[0] + '@s.whatsapp.net';
+        const ownerBot = config.owner[0];
+        const botId = conn.decodeJid(conn.user.id);
 
-        if (!victim) return m.reply(`*${config.visuals.emoji2}* \`Uso Incorrecto\` *${config.visuals.emoji2}*\n\nDebes etiquetar a alguien o responder a su mensaje para eliminarlo.`);
+        const participant = groupInfo.participants.find((p) => p.id === victim || p.lid === victim);
 
-        const botId = conn.user.id.split(':')[0] + '@s.whatsapp.net';
-        const isOwner = config.owner.includes(victim);
-        const isAdmin = participants.find(p => p.id === victim)?.admin;
+        if (!participant) {
+            return m.reply(`*${config.visuals.emoji2}* @${victim.split('@')[0]} ya no está en el grupo.`, null, { mentions: [victim] });
+        }
 
         if (victim === botId) {
             return m.reply(`*${config.visuals.emoji3}* No puedo eliminarme a mí mismo.`);
         }
 
-        if (isOwner) {
+        if (victim === ownerGroup) {
+            return m.reply(`*${config.visuals.emoji6}* No puedo eliminar al propietario del grupo.`);
+        }
+
+        if (config.owner.includes(victim)) {
             return m.reply(`*${config.visuals.emoji11}* Error de jerarquía: No tengo permitido eliminar a mi **Owner**.`);
         }
 
-        if (isAdmin) {
+        if (participant.admin) {
             return m.reply(`*${config.visuals.emoji6}* No puedo eliminar a @${victim.split('@')[0]} porque es un **Administrador**.`, null, { mentions: [victim] });
         }
 
         try {
-            await conn.sendMessage(m.chat, { 
-                text: `*${config.visuals.emoji7} \`SISTEMA DE MODERACIÓN\` ${config.visuals.emoji7}*\n\nEl usuario @${victim.split('@')[0]} será eliminado del grupo por orden administrativa.`,
-                mentions: [victim]
-            }, { quoted: m });
-
+            await m.reply(`*${config.visuals.emoji7} \`SISTEMA DE MODERACIÓN\` ${config.visuals.emoji7}*\n\nEl usuario @${victim.split('@')[0]} será eliminado del grupo.`, null, { mentions: [victim] });
+            
             await new Promise(resolve => setTimeout(resolve, 1000));
 
             await conn.groupParticipantsUpdate(m.chat, [victim], 'remove');
-
-        } catch (err) {
-            m.reply(`*${config.visuals.emoji2}* Hubo un fallo al intentar eliminar al usuario.`);
+        } catch (e) {
+            return m.reply(`*${config.visuals.emoji2}* Error: ${e.message}`);
         }
     }
 };
