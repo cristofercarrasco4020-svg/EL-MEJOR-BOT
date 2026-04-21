@@ -27,7 +27,7 @@ const depCommand = {
             }
 
             let amount = args[0];
-            if (!amount) return m.reply(`*${config.visuals.emoji2}* \`FALTAN DATOS\`\n\nIngresa una cantidad o usa *all*.\n*Ejemplo:* #dep 5000`);
+            if (!amount) return m.reply(`*${config.visuals.emoji2}* \`FALTAN DATOS\` *${config.visuals.emoji2}*\n\nIngresa una cantidad o usa *all*.\n*Ejemplo:* #dep 5000`);
 
             if (amount.toLowerCase() === 'all') {
                 amount = userData.wallet;
@@ -47,7 +47,7 @@ const depCommand = {
             fs.writeFileSync(dbPath, JSON.stringify(db, null, 2), 'utf-8');
 
             await conn.sendMessage(m.chat, { 
-                text: `*${config.visuals.emoji3}* \`DEPÓSITO EXITOSO\`\n\n*${config.visuals.emoji} Monto:* ¥${amount.toLocaleString()}\n*${config.visuals.emoji} Banco:* ¥${userData.bank.toLocaleString()}\n\n> *Restante en Cartera:* ¥${userData.wallet.toLocaleString()}`
+                text: `*${config.visuals.emoji3}* \`DEPÓSITO EXITOSO\` *${config.visuals.emoji3}*\n\n*${config.visuals.emoji} Monto:* ¥${amount.toLocaleString()}\n*${config.visuals.emoji} Banco:* ¥${userData.bank.toLocaleString()}\n\n> *Restante en Cartera:* ¥${userData.wallet.toLocaleString()}`
             }, { quoted: m });
 
         } catch (e) {
