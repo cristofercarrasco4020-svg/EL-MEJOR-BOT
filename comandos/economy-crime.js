@@ -32,7 +32,7 @@ const crimeCommand = {
                 const remaining = cooldown - timePassed;
                 const minutes = Math.floor(remaining / (1000 * 60));
                 const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
-                return m.reply(`*${config.visuals.emoji2}* \`Bajo vigilancia\` *${config.visuals.emoji2}*\n\nLa policía te busca. Espera a que se calmen las cosas.\n\n*${config.visuals.emoji} Vuelve en:* ${minutes}m ${seconds}s`);
+                return m.reply(`*${config.visuals.emoji2}* \`Bajo vigilancia\` *${config.visuals.emoji2}*\n\nEspera ${minutes}m ${seconds}s para volver a cometer un crimen.`);
             }
 
             const isSuccess = Math.random() > 0.3; 
