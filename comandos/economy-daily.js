@@ -8,30 +8,25 @@ const dailyCommand = {
     name: 'daily',
     alias: ['diario', 'recompensa'],
     category: 'economy',
-    isOwner: false,
     noPrefix: true,
-    isAdmin: false,
-    isGroup: false,
 
     run: async (conn, m) => {
         try {
-            const user = m.sender.split('@')[0];
+            const user = m.sender.split('@')[0].split(':')[0];
             const now = Date.now();
             let db = JSON.parse(fs.readFileSync(dbPath, 'utf-8'));
 
-            if (!db[user]) {
-                db[user] = { wallet: 0, bank: 0, daily: { lastClaim: 0, streak: 0 }, crime: { lastUsed: 0 } };
-            }
-
+            if (!db[user]) db[user] = { wallet: 0, bank: 0, daily: { lastClaim: 0, streak: 0 } };
+            
             const userData = db[user];
             const cooldown = 24 * 60 * 60 * 1000;
-            const timePassed = now - userData.daily.lastClaim;
+            const timePassed = now - (userData.daily?.lastClaim || 0);
 
             if (timePassed < cooldown) {
                 const remaining = cooldown - timePassed;
                 const hours = Math.floor(remaining / (1000 * 60 * 60));
                 const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
-                return m.reply(`*${config.visuals.emoji2}* \`TIEMPO RESTANTE\` *${config.visuals.emoji2}*\n\nYa reclamaste tu recompensa.\n*${config.visuals.emoji} Espera:* ${hours}h ${minutes}m`);
+                return m.reply(`*${config.visuals.emoji2}* \`TIEMPO RESTANTE\`\n\nYa reclamaste tu recompensa.\n*Espera:* ${hours}h ${minutes}m`);
             }
 
             userData.daily.streak = (timePassed < cooldown * 2) ? (userData.daily.streak + 1) : 1;
@@ -40,10 +35,10 @@ const dailyCommand = {
             userData.wallet += reward;
             userData.daily.lastClaim = now;
             db[user] = userData;
-            fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
+            fs.writeFileSync(dbPath, JSON.stringify(db, null, 2), 'utf-8');
 
             await conn.sendMessage(m.chat, { 
-                text: `*${config.visuals.emoji3}* \`RECOMPENSA DIARIA\` *${config.visuals.emoji3}*\n\n*${config.visuals.emoji4} Ganaste:* ¥${reward.toLocaleString()}\n*${config.visuals.emoji} Racha:* Día ${userData.daily.streak}\n\n> *Billetera:* ¥${userData.wallet.toLocaleString()}`
+                text: `*${config.visuals.emoji3}* \`RECOMPENSA DIARIA\`\n\n*Ganaste:* ¥${reward.toLocaleString()}\n*Racha:* Día ${userData.daily.streak}\n\n> *Billetera:* ¥${userData.wallet.toLocaleString()}`
             }, { quoted: m });
 
         } catch (e) {
