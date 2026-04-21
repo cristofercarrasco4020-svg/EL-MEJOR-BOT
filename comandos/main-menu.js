@@ -38,11 +38,27 @@ Aǫᴜɪ ᴛɪᴇɴᴇs ᴍɪ ʟɪsᴛᴀ ᴅᴇ ᴄᴏᴍᴀɴᴅᴏs
 *✿︎ ${prefix}p • ${prefix}ping*
 > ❀ Latencia del bot.
 
-*» (❍ᴥ❍ʋ) \`TOOLS\` «*
-> ꕥ Herramientas útiles.
+*» (❍ᴥ❍ʋ) \`ECONOMY\` «*
+> ꕥ Comandos de economía para ganar dinero y competir por ser el más rico en el bot.
 
-*✿︎ ${prefix}tourl • ${prefix}subir*
-> ❀ Convierte una imagen o sticker en un enlace de Yotsuba Cloud.
+*✿︎ ${prefix}daily • ${prefix}diario*
+> ❀ Reclama tu recompensa diaria de coins.
+*✿︎ ${prefix}work • ${prefix}chamba*
+> ❀ Trabaja duro para obtener un salario.
+*✿︎ ${prefix}slut • ${prefix}escenario*
+> ❀ Arriésgate en el escenario para ganar dinero.
+*✿︎ ${prefix}crime • ${prefix}crimen*
+> ❀ Comete actos ilícitos para obtener grandes sumas.
+*✿︎ ${prefix}baltop • ${prefix}topmoney*
+> ❀ Mira el ranking global de los usuarios más ricos.
+*✿︎ ${prefix}deposit • ${prefix}dep*
+> ❀ Asegura tus coins enviándolas al banco.
+*✿︎ ${prefix}pay • ${prefix}transferir*
+> ❀ Envía dinero de tu banco a otros usuarios.
+*✿︎ ${prefix}coinflip • ${prefix}flip*
+> ❀ Apuesta ¥1,000 en un cara o cruz.
+*✿︎ ${prefix}economy • ${prefix}economía*
+> ❀ Consulta tus balances y tiempos de espera.
 
 *» (❍ᴥ❍ʋ) \`SOCKETS\` «*
 > ꕥ Comandos de los subbots.
@@ -60,11 +76,24 @@ Aǫᴜɪ ᴛɪᴇɴᴇs ᴍɪ ʟɪsᴛᴀ ᴅᴇ ᴄᴏᴍᴀɴᴅᴏs
 *✿︎ ${prefix}antilink on/off*
 > ❀ Protector de enlaces.
 
-*» (❍ᴥ❍ʋ) \`DESCARGAS\` «*
-> ꕥ Multimedia de redes.
+*» (❍ᴥ❍ʋ) \`ADMINS\` «*
+> ꕥ Coman
 
-*✿︎ ${prefix}ytv* • *${prefix}yta*
+*» (❍ᴥ❍ʋ) \`DESCARGAS\` «*
+> ꕥ Descarga cosas en diferentes redes.
+
+*✿︎ ${prefix}ytv* • *${prefix}playvideo*
 > ❀ Descarga videos/audios de YouTube.
+*✿︎ ${prefix}play • ${prefix}playaudio*
+> ❀ Descarga videos de YouTube como audio.
+*✿︎ ${prefix}playdoc*
+Descarga videos de YouTube en formato de documento.
+
+*» (❍ᴥ❍ʋ) \`TOOLS\` «*
+> ꕥ Herramientas útiles.
+
+*✿︎ ${prefix}tourl • ${prefix}subir*
+> ❀ Convierte una imagen o sticker en un enlace de Yotsuba Cloud.
 
 *» (❍ᴥ❍ʋ) \`OWNER\` «*
 > ꕥ Comandos del creador.
