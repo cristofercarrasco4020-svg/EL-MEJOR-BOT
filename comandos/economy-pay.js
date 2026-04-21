@@ -21,7 +21,9 @@ const payCommand = {
                 return m.reply(`*${config.visuals.emoji2}* \`Error de Uso\`\n\nDebes **responder** al mensaje de la persona para enviarle dinero.\n\n> Ejemplo: #pay 5000 (respondiendo a su mensaje)`);
             }
 
-            const receiver = targetJid.split('@')[0];
+            // Aseguramos que el JID no traiga parámetros extra (como el :0)
+            const cleanTargetJid = targetJid.split('@')[0] + '@s.whatsapp.net';
+            const receiver = cleanTargetJid.split('@')[0];
 
             // 2. BLOQUEO DE AUTO-ENVÍO
             if (sender === receiver) {
@@ -29,14 +31,13 @@ const payCommand = {
             }
 
             // 3. LA CANTIDAD ES EL PRIMER ARGUMENTO
-            // Limpiamos cualquier cosa que no sea número del primer argumento
             let amount = parseInt(args[0]?.replace(/[^0-9]/g, ''));
 
             if (isNaN(amount) || amount <= 0) {
                 return m.reply(`*${config.visuals.emoji2}* \`Cantidad Inválida\`\n\nEscribe la cantidad después del comando.\n\n> Ejemplo: #pay 1000`);
             }
 
-            // LÍMITE MÍNIMO
+            // LÍMITE MÍNIMO DE 1,000
             if (amount < 1000) {
                 return m.reply(`*${config.visuals.emoji2}* El monto mínimo para enviar es ¥1,000.`);
             }
@@ -44,7 +45,7 @@ const payCommand = {
             // 4. VALIDACIÓN DE BASE DE DATOS
             if (!fs.existsSync(dbPath)) return m.reply('Error: DB no encontrada.');
             let db = JSON.parse(fs.readFileSync(dbPath, 'utf-8'));
-            
+
             let senderBank = Number(db[sender]?.bank || 0);
 
             if (senderBank < amount) {
@@ -59,9 +60,10 @@ const payCommand = {
 
             fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
 
+            // ENVÍO CON MENCIÓN LIMPIA
             await conn.sendMessage(m.chat, { 
                 text: `*${config.visuals.emoji3}* \`TRANSFERENCIA EXITOSA\`\n\n*De:* @${sender}\n*Para:* @${receiver}\n*Monto:* ¥${amount.toLocaleString()}\n\n> ¡Dinero enviado correctamente de banco a banco!`,
-                mentions: [m.sender, targetJid]
+                mentions: [m.sender, cleanTargetJid]
             }, { quoted: m });
 
         } catch (e) {
