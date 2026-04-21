@@ -39,10 +39,10 @@ export const startSubBot = async (userId, mainConn = null) => {
         },
         browser: Browsers.macOS('Safari'), 
         markOnlineOnConnect: true,
+        shouldIgnoreJid: () => false
     });
 
     global.subBots.set(jid, sock);
-
     sock.ev.on('creds.update', saveCreds);
 
     sock.ev.on('connection.update', async (update) => {
@@ -64,15 +64,19 @@ export const startSubBot = async (userId, mainConn = null) => {
         const m = chatUpdate.messages[0];
         if (!m.message) return;
 
-        // --- LÓGICA AUTO-LECTURA SUB-BOT ---
-        const bodyText = m.message.conversation || m.message.extendedTextMessage?.text || m.message.imageMessage?.caption || "";
+        const body = (m.message.conversation || m.message.extendedTextMessage?.text || m.message.imageMessage?.caption || "").trim();
         const prefixes = config.allPrefixes || ['#', '!', '.'];
-        const isCmd = prefixes.some(p => bodyText.startsWith(p));
+        
+        const hasPrefix = prefixes.some(p => body.startsWith(p));
+        const isNoPrefixCmd = Array.from(global.commands.values()).some(cmd => 
+            cmd.noPrefix && (body.toLowerCase() === cmd.name.toLowerCase() || (cmd.alias && cmd.alias.includes(body.toLowerCase())))
+        );
 
-        if (m.key.fromMe && !isCmd) return;
-        // ------------------------------------
+        if (m.key.fromMe && !hasPrefix && !isNoPrefixCmd) return;
 
         m.chat = m.key.remoteJid;
+        m.reply = (text) => sock.sendMessage(m.chat, { text }, { quoted: m });
+
         const msgType = Object.keys(m.message)[0];
         const msgContent = m.message[msgType];
         const contextInfo = msgContent?.contextInfo;
@@ -81,9 +85,7 @@ export const startSubBot = async (userId, mainConn = null) => {
             const type = Object.keys(contextInfo.quotedMessage)[0];
             const q = contextInfo.quotedMessage[type];
             m.quoted = {
-                type,
-                msg: q,
-                mimetype: q?.mimetype || '',
+                type, msg: q, mimetype: q?.mimetype || '',
                 message: contextInfo.quotedMessage,
                 download: () => downloadContentFromMessage(q, type.replace('Message', ''))
             };
