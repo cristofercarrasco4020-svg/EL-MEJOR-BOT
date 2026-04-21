@@ -5,7 +5,8 @@ import {
     makeCacheableSignalKeyStore, 
     DisconnectReason,
     Browsers,
-    jidNormalizedUser
+    jidNormalizedUser,
+    downloadContentFromMessage
 } from '@whiskeysockets/baileys';
 import P from 'pino';
 import fs from 'fs';
@@ -24,7 +25,7 @@ export const startSubBot = async (userId, mainConn = null) => {
     const jid = jidNormalizedUser(userId);
     const userNumber = jid.split('@')[0];
     const userSessionPath = path.join(sessionsPath, userNumber);
-    
+
     const { state, saveCreds } = await useMultiFileAuthState(userSessionPath);
     const { version } = await fetchLatestBaileysVersion();
 
@@ -36,8 +37,6 @@ export const startSubBot = async (userId, mainConn = null) => {
             creds: state.creds,
             keys: makeCacheableSignalKeyStore(state.keys, P({ level: 'silent' })),
         },
-        // --- CAMBIO DE IDENTIFICACIÓN ---
-        // Ahora aparecerá como Safari en MacOS para diferenciarlo del principal
         browser: Browsers.macOS('Safari'), 
         markOnlineOnConnect: true,
     });
@@ -48,37 +47,42 @@ export const startSubBot = async (userId, mainConn = null) => {
 
     sock.ev.on('connection.update', async (update) => {
         const { connection, lastDisconnect } = update;
-
         if (connection === 'close') {
             const code = lastDisconnect.error?.output?.statusCode;
-            const shouldReconnect = code !== DisconnectReason.loggedOut;
-
-            if (shouldReconnect) {
-                console.log(chalk.yellow(`[SUB-BOT] 🔄 Reconectando: ${userNumber}`));
+            if (code !== DisconnectReason.loggedOut) {
                 setTimeout(() => startSubBot(jid, mainConn), 5000);
             } else {
-                console.log(chalk.red(`[SUB-BOT] 🚪 Sesión cerrada: ${userNumber}`));
-                
-                if (mainConn) {
-                    try {
-                        const despedida = `[✿︎] Hola *${userNumber}*.\n\nGracias por haber formado parte de nuestros sockets. Si algún día quieres volver a ser SubBot de Kazuma, puedes hacerlo con el comando *${config.prefix}code*.\n\n> ¡Nos vemos la próxima vez!`;
-                        await mainConn.sendMessage(jid, { text: despedida });
-                    } catch (e) {}
-                }
-                
                 global.subBots.delete(jid);
-                if (fs.existsSync(userSessionPath)) {
-                    fs.rmSync(userSessionPath, { recursive: true, force: true });
-                }
+                if (fs.existsSync(userSessionPath)) fs.rmSync(userSessionPath, { recursive: true, force: true });
             }
         } else if (connection === 'open') {
-            console.log(chalk.green(`[SUB-BOT] ✅ Conectado como SAFARI: ${userNumber}`));
+            console.log(chalk.green(`[SUB-BOT] ✅ Conectado: ${userNumber}`));
         }
     });
 
     sock.ev.on('messages.upsert', async (chatUpdate) => {
         const m = chatUpdate.messages[0];
         if (!m.message || m.key.fromMe) return;
+
+        m.chat = m.key.remoteJid;
+        const msgType = Object.keys(m.message)[0];
+        const msgContent = m.message[msgType];
+        const contextInfo = msgContent?.contextInfo;
+
+        if (contextInfo?.quotedMessage) {
+            const type = Object.keys(contextInfo.quotedMessage)[0];
+            const q = contextInfo.quotedMessage[type];
+            m.quoted = {
+                type,
+                msg: q,
+                mimetype: q?.mimetype || '',
+                message: contextInfo.quotedMessage,
+                download: () => downloadContentFromMessage(q, type.replace('Message', ''))
+            };
+        } else {
+            m.quoted = null;
+        }
+
         socketLogger(m, sock);
         await pixelHandler(sock, m, config);
     });
@@ -89,7 +93,6 @@ export const startSubBot = async (userId, mainConn = null) => {
 export const loadAllSubBots = async (mainConn) => {
     try {
         const sessions = fs.readdirSync(sessionsPath);
-        if (sessions.length === 0) return;
         for (const num of sessions) {
             const jid = `${num}@s.whatsapp.net`;
             await new Promise(resolve => setTimeout(resolve, 3000));
