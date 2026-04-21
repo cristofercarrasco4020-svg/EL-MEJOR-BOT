@@ -6,7 +6,7 @@ export const socketLogger = (m, conn) => {
 
         const from = m.key.remoteJid;
         const isGroup = from.endsWith('@g.us');
-        const name = m.pushName || 'Sub-Bot User';
+        const name = m.key.fromMe ? 'YO (SUB-BOT)' : (m.pushName || 'Sub-Bot User');
         const sender = isGroup ? (m.key.participant || from) : from;
         const senderNumber = sender ? sender.split('@')[0] : '000000';
 
@@ -33,10 +33,13 @@ export const socketLogger = (m, conn) => {
         const groupInfo = isGroup ? chalk.yellow(` (G:${from.split('@')[0]})`) : chalk.green(` (P)`);
         const time = new Date().toLocaleTimeString();
 
+        const subTag = chalk.black.bgMagenta(`[SUB-PIXEL]`);
+        const userTag = m.key.fromMe ? chalk.greenBright(`${name}`) : chalk.cyan(`${name} (${senderNumber})`);
+
         console.log(
-            chalk.magenta(`[SUB-BOT]`) + 
-            chalk.blue(`[${time}]`) + 
-            chalk.cyan(` ${name} (${senderNumber}): `) + 
+            subTag + 
+            chalk.blue(`[${time}] `) + 
+            userTag + chalk.white(`: `) +
             chalk.white(body.length > 50 ? body.substring(0, 50) + '...' : body) +
             groupInfo
         );
