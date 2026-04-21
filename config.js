@@ -1,3 +1,6 @@
+import fs from 'fs';
+import path from 'path';
+
 export const config = {
     botName: 'Kazuma - Bot',
     owner: [
@@ -7,8 +10,10 @@ export const config = {
     prefix: '#',
     allPrefixes: ['#', '!', '.'],
 
-    soporte: {
-        numeros: []
+    getBotType: (conn) => {
+        const userNumber = conn.user.id.split(':')[0];
+        const subBotPath = path.resolve(`./sesiones_subbots/${userNumber}`);
+        return fs.existsSync(subBotPath) ? 'Sub-Bot' : 'Mood';
     },
 
     visuals: {
@@ -18,21 +23,7 @@ export const config = {
         emoji2: '❁',
         emoji3: '✿',
         emoji4: '❀',
-        emoji5: '⛁',
-        emoji6: '❒',
-        emoji7: '⸙',
-        emoji8: '⚥',
-        emoji9: '♡',
-        emoji10: '☆',
-        emoji11: '♛',
-        img1: 'https://link-de-tu-imagen-1.jpg',
-        img2: 'https://link-de-tu-imagen-2.jpg',
-        img3: 'https://link-de-tu-imagen-3.jpg'
-    },
-
-    bienvenidas: {
-        bienvenida1: '¡Hola! Soy Kazuma Bot, un placer atenderte.',
-        bienvenida2: 'Aquí tienes la lista de comandos:'
+        img1: 'https://files.catbox.moe/9ssbf9.jpg'
     },
 
     apiYT: 'NEX-0868C926ADF94B19A51E18C4',
