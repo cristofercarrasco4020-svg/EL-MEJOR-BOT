@@ -20,7 +20,7 @@ const dailyCommand = {
             let db = JSON.parse(fs.readFileSync(dbPath, 'utf-8'));
 
             if (!db[user]) {
-                db[user] = { coins: 0, daily: { lastClaim: 0, streak: 0 }, crime: { lastUsed: 0 } };
+                db[user] = { wallet: 0, bank: 0, daily: { lastClaim: 0, streak: 0 }, crime: { lastUsed: 0 } };
             }
 
             const userData = db[user];
@@ -56,7 +56,7 @@ const dailyCommand = {
                 contextInfo: {
                     externalAdReply: {
                         title: 'KAZUMA ECONOMY',
-                        body: `Billetera: ¥${userData.coins.toLocaleString()} Coins`,
+                        body: `Cartera: ¥${userData.wallet.toLocaleString()} Coins`,
                         thumbnailUrl: config.visuals.img1,
                         mediaType: 1,
                         showAdAttribution: false
@@ -65,6 +65,7 @@ const dailyCommand = {
             }, { quoted: m });
 
         } catch (e) {
+            console.error(e);
             m.reply(`*${config.visuals.emoji2}* \`Error\` *${config.visuals.emoji2}*\nNo se pudo procesar tu recompensa.`);
         }
     }
