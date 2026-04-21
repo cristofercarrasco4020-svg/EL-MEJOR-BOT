@@ -15,22 +15,22 @@ const tourlCommand = {
         const mime = (q.msg || q).mimetype || q.mediaType || '';
 
         if (!mime || !/image|sticker/.test(mime)) {
-            return m.reply(`*${config.visuals.emoji2}* \`Aviso\`\n\nResponde a una imagen con el comando *${usedPrefix}tourl* para generar tu enlace.`);
+            return m.reply(`*${config.visuals.emoji2}* \`Aviso de detección\`\n\nResponde a una imagen con el comando *${usedPrefix}tourl* para poder generar tu enlace.`);
         }
 
         try {
             const media = await q.download();
-            if (!media) throw new Error('No media');
+            if (!media) throw new Error('No se pudo descargar el medio.');
 
             const link = await uploadToYotsuba(media, mime);
             const tipo = mime.split("/")[1].toUpperCase();
 
-            const textoExito = `*${config.visuals.emoji3}* \`CARGA EXITOSA\` *${config.visuals.emoji3}*\n\n*🚀 Enlace:* upload.yotsuba.giize.com${link}\n*📂 Tipo:* ${tipo}\n\n> *${config.visuals.emoji}* \`Yotsuba Cloud System\``;
+            const textoExito = `*${config.visuals.emoji3}* \`CARGA EXITOSA\` *${config.visuals.emoji3}*\n\n*🚀 Enlace:* upload.yotsuba.giize.com${link}\n*📂 Tipo:* ${tipo}\n\n> ¡Sigue creando contenido asombroso!`;
 
             await conn.sendMessage(m.chat, { text: textoExito }, { quoted: m });
 
         } catch (err) {
-            m.reply(`*${config.visuals.emoji2}* Error en la subida.`);
+            m.reply(`*${config.visuals.emoji2}* Error en Servidor\nNo se pudo procesar la subida.`);
         }
     }
 };
