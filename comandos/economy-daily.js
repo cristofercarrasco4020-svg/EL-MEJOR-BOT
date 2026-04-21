@@ -37,7 +37,7 @@ const dailyCommand = {
                 const hours = Math.floor(remaining / (1000 * 60 * 60));
                 const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
                 
-                return m.reply(`*${config.visuals.emoji2}* \`Espera un poco\` *${config.visuals.emoji2}*\n\nYa has reclamado tu recompensa hoy.\n\n*${config.visuals.emoji5} Vuelve en:* ${hours}h ${minutes}m`);
+                return m.reply(`*${config.visuals.emoji2}* \`Espera un poco\` *${config.visuals.emoji2}*\n\nYa has reclamado tu recompensa hoy.\n\n*${config.visuals.emoji4] Vuelve en:* ${hours}h ${minutes}m`);
             }
 
             if (timePassed < cooldown * 2) {
