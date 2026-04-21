@@ -1,7 +1,3 @@
-/* KURAYAMI TEAM - INDEX ENGINE 
-   Desarrollado por Félix OFC para Kazuma Mister Bot
-*/
-
 import { 
     makeWASocket, 
     useMultiFileAuthState, 
@@ -9,7 +5,8 @@ import {
     makeCacheableSignalKeyStore, 
     DisconnectReason,
     Browsers,
-    jidDecode
+    jidDecode,
+    downloadContentFromMessage
 } from '@whiskeysockets/baileys';
 import P from 'pino';
 import fs from 'fs';
@@ -117,34 +114,46 @@ async function startBot() {
         let m = chatUpdate.messages[0];
         if (!m.message || m.key.fromMe) return;
 
-        // Propiedades base
         m.chat = m.key.remoteJid;
         m.sender = m.key.participant || m.key.remoteJid;
+        
         m.reply = (text) => conn.sendMessage(m.chat, { text }, { quoted: m });
+        
+        m.download = () => {
+            const msg = m.message.imageMessage || m.message.videoMessage || m.message.stickerMessage || m.message.audioMessage || m.message.documentMessage;
+            if (!msg) return null;
+            return downloadContentFromMessage(msg, m.message.imageMessage ? 'image' : m.message.videoMessage ? 'video' : m.message.stickerMessage ? 'sticker' : m.message.audioMessage ? 'audio' : 'document');
+        };
 
-        // Construir m.quoted si hay mensaje citado
         const msgType = Object.keys(m.message)[0];
         const msgContent = m.message[msgType];
         const contextInfo = msgContent?.contextInfo;
 
         if (contextInfo?.quotedMessage) {
+            const type = Object.keys(contextInfo.quotedMessage)[0];
+            const q = contextInfo.quotedMessage[type];
             m.quoted = {
+                type,
+                msg: q,
+                mimetype: q?.mimetype || '',
                 key: {
                     remoteJid: m.chat,
                     fromMe: contextInfo.participant === conn.user.id,
                     id: contextInfo.stanzaId,
                     participant: contextInfo.participant
                 },
-                message: contextInfo.quotedMessage
+                message: contextInfo.quotedMessage,
+                download: () => {
+                    const mediaType = type.replace('Message', '');
+                    return downloadContentFromMessage(q, mediaType);
+                }
             };
         } else {
             m.quoted = null;
         }
 
-        // --- EJECUCIÓN ANTI-LINK ---
+        logger(m, conn);
         await antiLinkHandler(conn, m);
-
-        // --- MANEJADOR PIXEL ---
         await pixelHandler(conn, m, config);
     });
 }
