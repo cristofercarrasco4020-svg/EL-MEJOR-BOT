@@ -14,37 +14,46 @@ const payCommand = {
         try {
             const sender = m.sender.split('@')[0];
 
-            // 1. Detección de objetivo (Lógica Rob)
+            // 1. DETECCIÓN DE OBJETIVO (LÓGICA ROB PURA)
             let targetJid = m.quoted ? m.quoted.key.participant || m.quoted.key.remoteJid : m.mentionedJid?.[0];
-            if (!targetJid && args[0] && args[0].includes('@')) {
-                targetJid = args[0].replace(/[^0-9]/g, '') + '@s.whatsapp.net';
+
+            if (!targetJid && args[0]) {
+                // Si no hay mención ni respuesta, intentamos sacar el número del primer argumento
+                let rawNumber = args[0].replace(/[^0-9]/g, '');
+                if (rawNumber.length >= 10) targetJid = rawNumber + '@s.whatsapp.net';
             }
 
-            if (!targetJid) return m.reply(`*${config.visuals.emoji2}* \`Error de objetivo\`\n\nDebes mencionar o responder a alguien.`);
+            if (!targetJid) return m.reply(`*${config.visuals.emoji2}* \`Error de objetivo\`\n\nDebes mencionar o responder a alguien.\n\n> ¡Indica a quién quieres enviarle dinero!`);
 
             const receiver = targetJid.split('@')[0];
-            if (sender === receiver) return m.reply(`*${config.visuals.emoji2}* No puedes enviarte dinero a ti mismo.`);
 
-            // 2. Extracción de cantidad (MEJORADA)
-            // Filtramos args para encontrar el monto real ignorando menciones
-            let amount = args.map(v => v.replace(/[^0-9]/g, '')).find(v => v.length > 0 && v !== receiver && v.length < 11);
+            // 2. BLOQUEO DE AUTO-ENVÍO
+            if (sender === receiver) {
+                return m.reply(`*${config.visuals.emoji2}* No puedes enviarte dinero a ti mismo.`);
+            }
+
+            // 3. EXTRACCIÓN DE CANTIDAD (SÚPER SIMPLE)
+            // Filtramos los argumentos: buscamos el que NO sea el número del receptor y sea un número válido
+            let amount = args.map(a => a.replace(/[^0-9]/g, '')).find(a => a.length > 0 && a !== receiver && a.length < 11);
             amount = parseInt(amount);
 
             if (isNaN(amount) || amount <= 0) {
                 return m.reply(`*${config.visuals.emoji2}* \`Cantidad Inválida\`\n\nUso: #pay 5000 @mención`);
             }
 
+            // LÍMITE MÍNIMO
             if (amount < 1000) return m.reply(`*${config.visuals.emoji2}* El monto mínimo es de ¥1,000.`);
 
-            // 3. Validación de Base de Datos
+            // 4. VALIDACIÓN DE SALDO
             let db = JSON.parse(fs.readFileSync(dbPath, 'utf-8'));
-            const senderBank = Number(db[sender]?.bank || 0);
+            let senderData = db[sender] || { bank: 0 };
+            let senderBank = Number(senderData.bank || 0);
 
             if (senderBank < amount) {
-                return m.reply(`*${config.visuals.emoji2}* \`Fondos Insuficientes\`\n\nTienes ¥${senderBank.toLocaleString()} en tu banco.\n\n> ¡Te faltan ¥${(amount - senderBank).toLocaleString()}!`);
+                return m.reply(`*${config.visuals.emoji2}* \`Fondos Insuficientes\`\n\nTienes ¥${senderBank.toLocaleString()} en tu banco.\n\n> ¡Necesitas más capital para enviar ¥${amount.toLocaleString()}!`);
             }
 
-            // 4. Ejecución
+            // 5. EJECUCIÓN
             if (!db[receiver]) db[receiver] = { wallet: 0, bank: 0, daily: { lastClaim: 0, streak: 0 } };
 
             db[sender].bank = senderBank - amount;
@@ -53,12 +62,13 @@ const payCommand = {
             fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
 
             await conn.sendMessage(m.chat, { 
-                text: `*${config.visuals.emoji3}* \`TRANSFERENCIA EXITOSA\`\n\n*De:* @${sender}\n*Para:* @${receiver}\n*Monto:* ¥${amount.toLocaleString()}\n\n> ¡Dinero enviado correctamente!`,
+                text: `*${config.visuals.emoji3}* \`TRANSFERENCIA EXITOSA\`\n\n*De:* @${sender}\n*Para:* @${receiver}\n*Monto:* ¥${amount.toLocaleString()}\n\n> ¡Transferencia de banco a banco completada!`,
                 mentions: [m.sender, targetJid]
             }, { quoted: m });
 
         } catch (e) {
-            m.reply(`*${config.visuals.emoji2}* Error en la transferencia.`);
+            console.error(e);
+            m.reply(`*${config.visuals.emoji2}* Error en el sistema bancario.`);
         }
     }
 };
