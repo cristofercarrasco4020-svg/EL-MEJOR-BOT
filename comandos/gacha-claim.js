@@ -15,6 +15,7 @@ const claimCommand = {
     run: async (conn, m, args) => {
         try {
             const user = m.sender.split('@')[0].split(':')[0];
+            const chat = global.db.data.chats[m.chat];
             const ahora = Date.now();
             
             if (claimCooldowns.has(user) && (ahora - claimCooldowns.get(user) < 9 * 60 * 1000)) {
@@ -25,20 +26,20 @@ const claimCommand = {
             let ecoDB = JSON.parse(fs.readFileSync(ecoPath, 'utf-8'));
             let pjId = null;
 
-            // 1. Si puso ID manual (#claim 11)
+            // 1. Si pusiste ID manual (#claim 24)
             if (args[0] && !isNaN(args[0])) {
                 pjId = args[0];
             } 
-            // 2. LA MAGIA: Si responde, buscamos el ID del mensaje en nuestra memoria
+            // 2. Por respuesta citando el mensaje
             else if (m.quoted) {
-                const quotedId = m.quoted.id; // Obtenemos el ID único del mensaje citado
-                if (global.db.rolls && global.db.rolls[quotedId]) {
-                    pjId = global.db.rolls[quotedId].id;
+                const quotedId = m.quoted.id;
+                if (chat.rolls && chat.rolls[quotedId]) {
+                    pjId = chat.rolls[quotedId].id;
                 }
             }
 
             if (!pjId || !gachaDB[pjId]) {
-                return m.reply(`*${config.visuals.emoji2}* Cita el mensaje de un personaje para reclamarlo.`);
+                return m.reply(`*${config.visuals.emoji2}* Cita el mensaje original del personaje para reclamarlo.`);
             }
             
             const pj = gachaDB[pjId];
@@ -59,12 +60,11 @@ const claimCommand = {
             fs.writeFileSync(gachaPath, JSON.stringify(gachaDB, null, 2));
             fs.writeFileSync(ecoPath, JSON.stringify(ecoDB, null, 2));
             
-            // Limpiar memoria para que no se use dos veces el mismo mensaje
-            delete global.db.rolls[m.quoted?.id];
+            // Borramos el roll para que no lo reclamen dos veces
+            if (m.quoted) delete chat.rolls[m.quoted.id];
             
             claimCooldowns.set(user, ahora);
-
-            m.reply(`*${config.visuals.emoji3}* ¡Felicidades! Ahora *${pj.name}* es tuyo.`);
+            m.reply(`*${config.visuals.emoji3}* ¡Lograste domar a *${pj.name}*!`);
 
         } catch (e) {
             console.error(e);
