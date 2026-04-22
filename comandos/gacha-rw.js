@@ -49,8 +49,6 @@ const rwCommand = {
                 mentions: pj.owner ? [pj.owner + '@s.whatsapp.net'] : []
             }, { quoted: m });
 
-            // --- ESTA ES LA CLAVE ---
-            // Guardamos el roll en la base de datos global del chat
             if (!global.db.data.chats[m.chat].rolls) global.db.data.chats[m.chat].rolls = {};
             global.db.data.chats[m.chat].rolls[sent.key.id] = { 
                 id: randomId, 
@@ -60,8 +58,7 @@ const rwCommand = {
             cooldowns.set(user, ahora);
 
         } catch (e) {
-            console.error(e);
-            m.reply(`*${config.visuals.emoji2}* Error en el sistema.`);
+            m.reply(`*${config.visuals.emoji2}* Error en el sistema de gacha.`);
         }
     }
 };
