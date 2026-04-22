@@ -1,72 +1,69 @@
+import { config } from '../config.js';
 import fs from 'fs';
 import path from 'path';
-import { config } from '../config.js';
 
-const tarjetasPath = path.resolve('./config/database/economy/targets.json');
-const economyPath = path.resolve('./config/database/economy/economy.json');
+const dbPath = path.resolve('./config/database/economy/economy.json');
 
-const claimCard = {
-    name: 'claim',
-    alias: ['usartarjeta', 'tarjeta'],
+const payCommand = {
+    name: 'pay',
+    alias: ['pagar', 'transferir', 'dar'],
     category: 'economy',
-    isGroup: false,
     noPrefix: true,
 
-    run: async (conn, m, args, usedPrefix) => {
-        const senderJid = m.sender.split('@')[0].split(':')[0];
-        const inputCode = args[0];
-
-        if (!inputCode) {
-            return m.reply(`*${config.visuals.emoji2}* \`Falta Código\` *${config.visuals.emoji2}*\n\nPor favor, ingresa el código de tu tarjeta.\n\n> Ejemplo: *${usedPrefix}claim KZM-0000-XX*`);
-        }
-
-        if (!fs.existsSync(tarjetasPath)) {
-            return m.reply(`*${config.visuals.emoji2}* El sistema de tarjetas no está disponible.`);
-        }
-
-        if (!fs.existsSync(economyPath)) {
-            return m.reply(`*${config.visuals.emoji2}* El sistema de economía no está disponible.`);
-        }
-
+    run: async (conn, m, args) => {
         try {
-            let dbCards = JSON.parse(fs.readFileSync(tarjetasPath, 'utf-8'));
-            const cardIndex = dbCards.tarjetas.findIndex(t => t.codigo === inputCode);
+            const sender = m.sender.split('@')[0].split(':')[0];
+            let quotedJid = m.quoted ? m.quoted.key.participant || m.quoted.key.remoteJid : null;
 
-            if (cardIndex === -1) {
-                return m.reply(`*${config.visuals.emoji2}* \`Código Inválido\`\n\nEse código de tarjeta no existe.`);
+            if (!quotedJid) {
+                return m.reply(`*${config.visuals.emoji2}* \`Error de Uso\`\n\nDebes responder al mensaje de alguien.\n\n> Ejemplo: #pay 5000`);
             }
 
-            const card = dbCards.tarjetas[cardIndex];
+            const receiver = quotedJid.split('@')[0].split(':')[0];
+            const cleanTargetJid = receiver + '@s.whatsapp.net';
 
-            if (card.usada) {
-                return m.reply(`*${config.visuals.emoji2}* \`Tarjeta Agotada\`\n\nEsta tarjeta ya fue reclamada.`);
+            if (sender === receiver) {
+                return m.reply(`*${config.visuals.emoji2}* No puedes enviarte dinero a ti mismo.`);
             }
 
-            let ecoDb = JSON.parse(fs.readFileSync(economyPath, 'utf-8'));
-
-            if (!ecoDb[senderJid]) {
-                ecoDb[senderJid] = { wallet: 0, bank: 0, daily: { lastClaim: 0, streak: 0 }, crime: { lastUsed: 0 } };
+            let amount = parseInt(args[0]?.replace(/[^0-9]/g, ''));
+            if (isNaN(amount) || amount <= 0) {
+                return m.reply(`*${config.visuals.emoji2}* Indica una cifra válida.`);
             }
 
-            const montoFinal = Number(card.monto);
-            ecoDb[senderJid].bank = Number(ecoDb[senderJid].bank || 0) + montoFinal;
+            if (amount < 1000) {
+                return m.reply(`*${config.visuals.emoji2}* El mínimo es ¥1,000.`);
+            }
 
-            dbCards.tarjetas[cardIndex].usada = true;
-            dbCards.tarjetas[cardIndex].reclamadaPor = senderJid;
-            dbCards.tarjetas[cardIndex].fechaReclamo = new Date().toISOString();
+            if (!fs.existsSync(dbPath)) return m.reply('Error: DB no encontrada.');
+            let db = JSON.parse(fs.readFileSync(dbPath, 'utf-8'));
 
-            fs.writeFileSync(economyPath, JSON.stringify(ecoDb, null, 2), 'utf-8');
-            fs.writeFileSync(tarjetasPath, JSON.stringify(dbCards, null, 2), 'utf-8');
+            if (!db[sender]) db[sender] = { wallet: 0, bank: 0 };
+            let senderBank = Number(db[sender].bank || 0);
+
+            if (senderBank < amount) {
+                return m.reply(`*${config.visuals.emoji2}* \`Fondos Insuficientes\`\n\nTienes ¥${senderBank.toLocaleString()} en tu banco.`);
+            }
+
+            if (!db[receiver]) {
+                db[receiver] = { wallet: 0, bank: 0, daily: { lastClaim: 0, streak: 0 }, crime: { lastUsed: 0 } };
+            }
+
+            db[sender].bank = senderBank - amount;
+            db[receiver].bank = Number(db[receiver].bank || 0) + amount;
+
+            fs.writeFileSync(dbPath, JSON.stringify(db, null, 2), 'utf-8');
 
             await conn.sendMessage(m.chat, { 
-                text: `*${config.visuals.emoji3}* \`TARJETA RECLAMADA\`\n\n*❁* Código: \`${card.codigo}\`\n*❁* Monto: \`¥${montoFinal.toLocaleString()}\`\n\n> El dinero ha sido depositado exitosamente en tu **Banco**.`,
+                text: `*${config.visuals.emoji3}* \`TRANSFERENCIA EXITOSA\`\n\n*De:* @${sender}\n*Para:* @${receiver}\n*Monto:* ¥${amount.toLocaleString()}\n\n> ¡Dinero enviado correctamente!`,
+                mentions: [m.sender, cleanTargetJid]
             }, { quoted: m });
 
-        } catch (err) {
-            console.error(err);
-            m.reply(`*${config.visuals.emoji2}* Error interno al procesar la transacción.`);
+        } catch (e) {
+            console.error(e);
+            m.reply(`*${config.visuals.emoji2}* Error en el sistema.`);
         }
     }
 };
 
-export default claimCard;
+export default payCommand;
