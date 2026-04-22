@@ -25,11 +25,16 @@ export const pixelHandler = async (conn, m, config) => {
         if (!body) return;
 
         let activePrefixes = config.allPrefixes || ['#', '!', '.'];
+        let isCustom = false;
+
         if (fs.existsSync(prefixPath)) {
-            const prefixData = JSON.parse(fs.readFileSync(prefixPath, 'utf-8'));
-            if (prefixData.selected) {
-                activePrefixes = [prefixData.selected];
-            }
+            try {
+                const prefixData = JSON.parse(fs.readFileSync(prefixPath, 'utf-8'));
+                if (prefixData.selected) {
+                    activePrefixes = [prefixData.selected];
+                    isCustom = true;
+                }
+            } catch (e) {}
         }
 
         const foundPrefix = activePrefixes.find(p => body.startsWith(p));
@@ -61,10 +66,7 @@ export const pixelHandler = async (conn, m, config) => {
                     Array.from(global.commands.values()).find(c => c.alias && c.alias.includes(commandName));
 
         if (!cmd) return;
-        
         if (!foundPrefix && !cmd.noPrefix) return;
-        
-        if (foundPrefix && activePrefixes.length === 1 && foundPrefix !== activePrefixes[0]) return;
 
         if (!isGroup && !isOwner && commandName !== 'code') return;
 
