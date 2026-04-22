@@ -12,9 +12,17 @@ const haremCommand = {
 
     run: async (conn, m, args) => {
         try {
-            // 1. Determinar de quién es el harem
-            let targetJid = m.sender; // Por defecto el que usa el comando
-            
+            let targetJid = m.sender;
+            let page = 1;
+
+            // Lógica para detectar página y mención en los argumentos
+            if (args.length > 0) {
+                const lastArg = args[args.length - 1];
+                if (!isNaN(lastArg)) {
+                    page = parseInt(lastArg);
+                }
+            }
+
             if (m.message?.extendedTextMessage?.contextInfo?.mentionedJid?.[0]) {
                 targetJid = m.message.extendedTextMessage.contextInfo.mentionedJid[0];
             } else if (m.quoted) {
@@ -24,11 +32,9 @@ const haremCommand = {
             const targetId = targetJid.split('@')[0].split(':')[0];
             const isMe = targetJid === m.sender;
 
-            // 2. Leer base de datos de gacha
             if (!fs.existsSync(gachaPath)) return m.reply(`*${config.visuals.emoji2}* Error: Base de datos no encontrada.`);
             const gachaDB = JSON.parse(fs.readFileSync(gachaPath, 'utf-8'));
 
-            // 3. Filtrar personajes que pertenecen al usuario
             let misPjs = [];
             for (let id in gachaDB) {
                 if (gachaDB[id].owner === targetId) {
@@ -36,7 +42,6 @@ const haremCommand = {
                 }
             }
 
-            // 4. Si no tiene personajes
             if (misPjs.length === 0) {
                 if (isMe) {
                     return m.reply(`*${config.visuals.emoji2}* Aún no tienes personajes reclamados en tu inventario.\n\n> ¡Usa el comando #rw y luego #c para conseguir personajes épicos!`);
@@ -48,20 +53,32 @@ const haremCommand = {
                 }
             }
 
-            // 5. Ordenar por valor (Mayor a Menor)
+            // Ordenar por valor (Mayor a Menor)
             misPjs.sort((a, b) => b.value - a.value);
 
-            // 6. Construir el mensaje
-            let txt = `*${config.visuals.emoji3} \`HAREM DEL USUARIO\` ${config.visuals.emoji3}*\n`;
-            txt += `» @${targetId}\n\n`;
+            // Configuración de paginación (5 por página)
+            const itemsPerPage = 5;
+            const totalPages = Math.ceil(misPjs.length / itemsPerPage);
 
-            misPjs.forEach((pj) => {
+            if (page > totalPages || page <= 0) {
+                return m.reply(`*${config.visuals.emoji2}* \`PÁGINA NO ENCONTRADA\`\n\nEl usuario solo tiene **${totalPages}** página(s) en su harem.`);
+            }
+
+            const start = (page - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const currentPjs = misPjs.slice(start, end);
+
+            // Construcción del mensaje
+            let txt = `*${config.visuals.emoji3} \`HAREM DEL USUARIO\` ${config.visuals.emoji3}*\n`;
+            txt += `» @${targetId} (${misPjs.length} personajes)\n`;
+            txt += `*Página:* ${page} de ${totalPages}\n\n`;
+
+            currentPjs.forEach((pj) => {
                 txt += `› ${pj.name}\n`;
             });
 
             txt += `\n> ¡Sigue reclamando más personajes para que seas el que más tiene!`;
 
-            // 7. Enviar
             await conn.sendMessage(m.chat, { 
                 text: txt, 
                 mentions: [targetJid] 
