@@ -43,7 +43,7 @@ const topPjsCommand = {
 
             currentTop.forEach((pj, index) => {
                 const ranking = start + index + 1;
-                const status = pj.status === 'libre' ? 'Libre' : `@${pj.owner}`;
+                const status = pj.status === 'libre' ? 'Libre' : `reclamado por @${pj.owner}`;
                 txt += `*${ranking}.* ${pj.name}\n`;
                 txt += `  > *Valor:* ¥${pj.value.toLocaleString()}\n`;
                 txt += `  > *Estado:* ${status}\n\n`;
