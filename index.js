@@ -32,6 +32,14 @@ const question = (text) => new Promise((resolve) => rl.question(text, resolve));
 global.commands = new Map();
 global.lastMessageMap = new Map();
 
+global.db = {
+    data: {
+        chats: {},
+        users: {},
+        characters: {}
+    }
+};
+
 global.loadCommands = async () => {
     process.stdout.write(chalk.cyan('  [⚙️] Cargando módulos de comandos... '));
     const commandsPath = path.resolve(__dirname, 'comandos');
@@ -118,18 +126,18 @@ async function startBot() {
 
         const body = (m.message.conversation || m.message.extendedTextMessage?.text || m.message.imageMessage?.caption || "").trim();
         const prefixes = config.allPrefixes || ['#', '!', '.'];
-        
-        // Verificación inteligente de comandos
+
         const hasPrefix = prefixes.some(p => body.startsWith(p));
         const isNoPrefixCmd = Array.from(global.commands.values()).some(cmd => 
             cmd.noPrefix && (body.toLowerCase() === cmd.name.toLowerCase() || (cmd.alias && cmd.alias.includes(body.toLowerCase())))
         );
 
-        // Si es del bot, solo dejamos pasar si tiene prefijo o es un comando noPrefix manual
         if (m.key.fromMe && !hasPrefix && !isNoPrefixCmd) return;
 
         m.chat = m.key.remoteJid;
         m.sender = m.key.participant || m.key.remoteJid;
+
+        if (!global.db.data.chats[m.chat]) global.db.data.chats[m.chat] = { rolls: {} };
 
         global.lastMessageMap.set(m.sender, Date.now());
         m.reply = (text) => conn.sendMessage(m.chat, { text }, { quoted: m });
@@ -148,7 +156,10 @@ async function startBot() {
             const type = Object.keys(contextInfo.quotedMessage)[0];
             const q = contextInfo.quotedMessage[type];
             m.quoted = {
-                type, msg: q, mimetype: q?.mimetype || '',
+                type, 
+                msg: q, 
+                id: contextInfo.stanzaId,
+                mimetype: q?.mimetype || '',
                 key: {
                     remoteJid: m.chat,
                     fromMe: contextInfo.participant === conn.user.id,
