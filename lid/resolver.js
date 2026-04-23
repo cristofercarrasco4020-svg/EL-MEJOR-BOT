@@ -1,6 +1,6 @@
 const clusterCache = new Map();
 const identityMap = new Map();
-const TTL_METADATA = 10000; // 10 segundos
+const TTL_METADATA = 10000; 
 
 function getFreshMetadata(groupId) {
     const entry = clusterCache.get(groupId);
