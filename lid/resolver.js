@@ -8,9 +8,6 @@ function getFreshMetadata(groupId) {
     return entry.data;
 }
 
-/**
- * Normaliza cualquier ID a formato WhatsApp Standard
- */
 export function formatJid(id) {
     if (!id) return null;
     const cleanId = typeof id === 'number' ? id.toString() : id.replace(/\D/g, '');
