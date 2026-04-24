@@ -1,4 +1,5 @@
 import { config } from '../config.js';
+import { avisos } from '../config/avisos.js';
 
 const openGroup = {
     name: 'open',
@@ -14,7 +15,7 @@ const openGroup = {
             const isBotAdmin = groupMetadata.participants.find(p => p.id === botNumber)?.admin;
 
             if (!isBotAdmin) {
-                return m.reply(`*${config.visuals.emoji2}* El bot no posee rango de Administrador. No tengo poder para alterar los ajustes del grupo.\n\n> ¡Solicita el rango si deseas automatizar esta función!`);
+                return m.reply(avisos.noBotAdmin);
             }
 
             if (!groupMetadata.announce) {
