@@ -7,7 +7,7 @@ const shopPath = path.resolve('./config/database/gacha/gacha_shop.json');
 
 const unsellCommand = {
     name: 'unsell',
-    alias: ['retirar', 'cancelarsell'],
+    alias: ['cancelarsell', 'cancelpj'],
     category: 'gacha',
     noPrefix: true,
 
