@@ -19,29 +19,36 @@ const marryCommand = {
             let casados = JSON.parse(fs.readFileSync(marryPath, 'utf-8'));
 
             if (args[0] === 'accept') {
-                if (!m.quoted || !proposals.has(m.quoted.id)) return m.reply('No tienes propuestas.');
+                if (!m.quoted || !proposals.has(m.quoted.id)) return m.reply('No hay propuestas pendientes.');
                 const prop = proposals.get(m.quoted.id);
-                if (m.sender !== prop.to) return m.reply('No es para ti.');
+                if (m.sender !== prop.to) return m.reply('Esta propuesta no es para ti.');
 
                 casados[user] = prop.from;
                 casados[prop.from] = user;
 
                 fs.writeFileSync(marryPath, JSON.stringify(casados, null, 2));
                 proposals.delete(m.quoted.id);
-                return m.reply(`*${config.visuals.emoji3}* ¡Felicidades! Se han casado.`, { mentions: [m.sender, prop.fromJid] });
+                return m.reply(`*${config.visuals.emoji3}* ¡Felicidades! Se han casado correctamente.`, { mentions: [m.sender, prop.fromJid] });
+            }
+
+            if (casados[user]) {
+                return m.reply(`*${config.visuals.emoji2}* ¡Ya estás casado! Si quieres casarte con alguien más, primero debes usar el comando #divorce.`);
             }
 
             const targetJid = m.message?.extendedTextMessage?.contextInfo?.mentionedJid?.[0] || (m.quoted ? m.quoted.sender : null);
-            if (!targetJid) return m.reply('Menciona a alguien.');
+            if (!targetJid) return m.reply('Menciona a alguien para proponer matrimonio.');
 
             const target = targetJid.split('@')[0].split(':')[0];
 
+            if (casados[target]) {
+                return m.reply(`*${config.visuals.emoji2}* Esa persona ya está casada con alguien más.`);
+            }
+
             if (!genres[user] || !genres[target]) return m.reply('Ambos deben tener género establecido (#setgenre).');
-            if (genres[user] === genres[target]) return m.reply('Solo se permite hombre con mujer.');
-            if (casados[user] || casados[target]) return m.reply('Uno de los dos ya está casado.');
+            if (genres[user] === genres[target]) return m.reply('Matrimonio denegado: Solo se permite hombre con mujer.');
 
             const sent = await conn.sendMessage(m.chat, { 
-                text: `@${user} te pide matrimonio. #marry accept para aceptar.`,
+                text: `*💍 PROPUESTA DE MATRIMONIO 💍*\n\n@${user} te pide matrimonio. Responde a este mensaje con *#marry accept* para aceptar.`,
                 mentions: [m.sender, targetJid]
             }, { quoted: m });
 
