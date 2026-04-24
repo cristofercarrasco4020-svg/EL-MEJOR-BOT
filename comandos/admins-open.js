@@ -5,7 +5,6 @@ const openGroup = {
     alias: ['abrirgroup', 'abrirdatos', 'abrir'],
     category: 'admins',
     isAdmin: true,
-    isBotAdmin: false,
     noPrefix: true,
 
     run: async (conn, m) => {
