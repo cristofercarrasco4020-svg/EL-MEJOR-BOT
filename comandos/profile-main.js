@@ -23,11 +23,12 @@ const profileCommand = {
 
             let txt = `*${config.visuals.emoji3} \`PERFIL DE USUARIO\` ${config.visuals.emoji3}*\n\n`;
             txt += `*✿︎ Usuario:* @${user}\n`;
+            txt += `*✿︎ Edad:* ${data.age ? data.age + ' años' : 'No definida'}\n`;
             txt += `*✿︎ Género:* ${data.genre || 'No definido'}\n`;
             txt += `*✿︎ Cumpleaños:* ${data.birth || 'No definido'}\n`;
             txt += `*✿︎ Pareja:* ${data.partner ? '@' + data.partner : 'Soltero/a'}\n`;
             txt += `*✿︎ Fav PJ:* ${data.favPj || 'Ninguno'}\n\n`;
-            txt += `> ¡Usa los comandos de profile para editar tu info!`;
+            txt += `> Usa los comandos de #profile-set para editar tu info.`;
 
             await conn.sendMessage(m.chat, { 
                 image: { url: pp }, 
