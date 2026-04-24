@@ -8,16 +8,24 @@ const kickCommand = {
     isBotAdmin: true,
     noPrefix: true,
 
-    run: async (conn, m, args) => {
+    run: async (conn, m) => {
         try {
-            const userToKick = m.message?.extendedTextMessage?.contextInfo?.mentionedJid?.[0] || (m.quoted ? m.quoted.sender : null);
+            let targetJid;
 
-            if (!userToKick) {
-                return m.reply(`*${config.visuals.emoji2} \`ERROR DE OBJETIVO\` ${config.visuals.emoji2}*\n\nDebes mencionar a alguien o responder a su mensaje para ejecutar la purga.\n\n> ¡Indica a quién debemos eliminar del grupo!`);
+            if (m.message?.extendedTextMessage?.contextInfo?.mentionedJid?.[0]) {
+                targetJid = m.message.extendedTextMessage.contextInfo.mentionedJid[0];
+            } else if (m.quoted) {
+                targetJid = m.quoted.key.participant || m.quoted.key.remoteJid;
             }
 
+            if (!targetJid) {
+                return m.reply(`*${config.visuals.emoji2}* Debes mencionar a alguien o responder a su mensaje para ejecutar la purga.\n\n> ¡Indica a quién debemos eliminar del grupo!`);
+            }
+
+            const userToKick = targetJid.split('@')[0].split(':')[0] + '@s.whatsapp.net';
             const botNumber = conn.user.id.split(':')[0] + '@s.whatsapp.net';
             const ownerNumber = config.owner[0][0] + '@s.whatsapp.net';
+            
             const groupMetadata = await conn.groupMetadata(m.chat);
             const participants = groupMetadata.participants;
             const targetData = participants.find(p => p.id === userToKick);
