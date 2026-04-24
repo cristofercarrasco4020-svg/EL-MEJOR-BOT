@@ -17,7 +17,7 @@ const unsellCommand = {
             const pjId = args[0];
 
             if (!pjId) return m.reply(`*${config.visuals.emoji2}* Indica el ID del personaje que deseas retirar del mercado.`);
-            if (!fs.existsSync(shopPath)) return m.reply(`*${config.visuals.emoji2}* El mercado está vacío.`);
+            if (!fs.existsSync(shopPath)) return m.reply(`*${config.visuals.emoji2}* El mercado está vacío. Por el cual no hay personajes para retirar.`);
 
             let shopDB = JSON.parse(fs.readFileSync(shopPath, 'utf-8'));
             let gachaDB = JSON.parse(fs.readFileSync(gachaPath, 'utf-8'));
