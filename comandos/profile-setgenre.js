@@ -31,7 +31,6 @@ const setGenreCommand = {
             genres[user] = nuevoGenero;
             fs.writeFileSync(genrePath, JSON.stringify(genres, null, 2));
 
-            // Verificación de Divorcio Automático
             if (casados[user]) {
                 const pareja = casados[user];
                 const generoPareja = genres[pareja];
@@ -41,12 +40,12 @@ const setGenreCommand = {
                     delete casados[pareja];
                     fs.writeFileSync(marryPath, JSON.stringify(casados, null, 2));
 
-                    const aviso = `*${config.visuals.emoji3}* DIVORCIO AUTOMÁTICO *${config.visuals.emoji3}*\n\nSe han detectado géneros iguales en el matrimonio. En Kazuma solo se permiten parejas de Hombre y Mujer. El matrimonio ha sido anulado.`;
+                    const aviso = `*⚠️ DIVORCIO AUTOMÁTICO ⚠️*\n\nSe han detectado géneros iguales en el matrimonio. El matrimonio ha sido anulado.`;
                     
                     await conn.sendMessage(m.sender, { text: aviso });
                     await conn.sendMessage(pareja + '@s.whatsapp.net', { text: aviso });
                     
-                    return m.reply(`*${config.visuals.emoji3}* Género establecido, pero debido a que tu pareja es *${generoPareja}*, han sido divorciados automáticamente.`);
+                    return m.reply(`*${config.visuals.emoji3}* Género establecido, pero debido a conflicto con tu pareja, han sido divorciados.`);
                 }
             }
 
