@@ -5,52 +5,65 @@ const databasePath = path.resolve('./jsons/grupos.json');
 
 const configOnOff = {
     name: 'config',
-    alias: ['detect', 'antilink', 'welcome'], 
+    alias: ['detect', 'antilink'], 
     category: 'grupo',
     isAdmin: true,
     isGroup: true,
     noPrefix: true,
 
     run: async (conn, m, args, usedPrefix, commandName) => {
-        const from = m.chat;
+        const from = m.key.remoteJid;
         let feature = '';
         let action = '';
 
         if (commandName === 'config') {
             feature = args[0]?.toLowerCase();
             action = args[1]?.toLowerCase();
-        } else {
-            feature = commandName;
+        } 
+        else if (commandName === 'detect') {
+            feature = 'detect';
+            action = args[0]?.toLowerCase();
+        }
+        else if (commandName === 'antilink') {
+            feature = 'antilink';
             action = args[0]?.toLowerCase();
         }
 
-        const validFeatures = ['detect', 'antilink', 'welcome'];
+        const validFeatures = ['detect', 'antilink'];
         if (!validFeatures.includes(feature)) {
-            return m.reply(`*${config.visuals.emoji2} \`OPCIÓN INVÁLIDA\` ${config.visuals.emoji2}*\n\nUsa:\n*✿︎* \`${usedPrefix}detect on/off\`\n*✿︎* \`${usedPrefix}antilink on/off\`\n*✿︎* \`${usedPrefix}welcome on/off\``);
+            return m.reply(`*❁* \`Opción Inválida\` *❁*\n\nUsa:\n*✿︎* \`${usedPrefix}detect on/off\`\n*✿︎* \`${usedPrefix}antilink on/off\``);
         }
 
         if (!action || !['on', 'off'].includes(action)) {
-            return m.reply(`*${config.visuals.emoji2} \`FALTA ESTADO\` ${config.visuals.emoji2}*\n\nEspecifica *on* o *off* para *${feature}*.`);
+            return m.reply(`*❁* \`Falta Estado\` *❁*\n\nEspecifica si quieres activar o desactivar *${feature}*.\n\n> Ejemplo: *${usedPrefix}${feature} on*`);
         }
 
         const enabled = (action === 'on');
 
         try {
-            if (!fs.existsSync(path.resolve('./jsons'))) fs.mkdirSync(path.resolve('./jsons'), { recursive: true });
-            let db = fs.existsSync(databasePath) ? JSON.parse(fs.readFileSync(databasePath, 'utf-8')) : {};
-
-            if (!db[from]) db[from] = { detect: true, antilink: true, welcome: true };
-
-            if (db[from][feature] === enabled) {
-                return m.reply(`*${config.visuals.emoji2} \`ESTADO ACTUAL\` ${config.visuals.emoji2}*\n\nLa función *${feature.toUpperCase()}* ya se encuentra *${enabled ? 'Activada' : 'Desactivada'}*.\n\n> ¡No es necesario cambiarlo de nuevo!`);
+            if (!fs.existsSync(path.resolve('./jsons'))) {
+                fs.mkdirSync(path.resolve('./jsons'), { recursive: true });
             }
 
+            let db = {};
+            if (fs.existsSync(databasePath)) {
+                db = JSON.parse(fs.readFileSync(databasePath, 'utf-8'));
+            }
+
+            if (!db[from]) db[from] = { detect: true, antilink: true };
+
             db[from][feature] = enabled;
+
             fs.writeFileSync(databasePath, JSON.stringify(db, null, 2));
 
-            m.reply(`*${config.visuals.emoji3} \`AJUSTE ACTUALIZADO\` ${config.visuals.emoji3}*\n\n*${feature.toUpperCase()}* ha sido *${enabled ? 'Activada' : 'Desactivada'}*.\n\n> ¡Configuración aplicada con éxito!`);
+            const statusText = enabled ? 'Activada' : 'Desactivada';
+            await conn.sendMessage(from, { 
+                text: `*✿︎* \`Ajuste de Grupo\` *✿︎*\n\nLa función *${feature.toUpperCase()}* ha sido *${statusText}*.\n\n> ¡No uses esto de manera abusiva!` 
+            }, { quoted: m });
+
         } catch (err) {
-            m.reply('✘ Error al guardar configuración.');
+            console.error('Error en Config:', err);
+            m.reply('❌ Error al guardar en el archivo JSON.');
         }
     }
 };
