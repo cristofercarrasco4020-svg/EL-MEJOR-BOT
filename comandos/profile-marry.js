@@ -32,7 +32,7 @@ const marryCommand = {
             }
 
             if (casados[user]) {
-                return m.reply(`*${config.visuals.emoji2}* ¡Ya estás casado! Si quieres casarte con alguien más, primero debes usar el comando #divorce.`);
+                return m.reply(`*${config.visuals.emoji2}* ¡Ya estás casado! Usa el comando #divorce si quieres separarte.`);
             }
 
             const targetJid = m.message?.extendedTextMessage?.contextInfo?.mentionedJid?.[0] || (m.quoted ? m.quoted.sender : null);
@@ -41,21 +41,21 @@ const marryCommand = {
             const target = targetJid.split('@')[0].split(':')[0];
 
             if (casados[target]) {
-                return m.reply(`*${config.visuals.emoji2}* Esa persona ya está casada con alguien más.`);
+                return m.reply(`*${config.visuals.emoji2}* Esa persona ya está casada.`);
             }
 
             if (!genres[user] || !genres[target]) return m.reply('Ambos deben tener género establecido (#setgenre).');
-            if (genres[user] === genres[target]) return m.reply('Matrimonio denegado: Solo se permite hombre con mujer.');
+            if (genres[user] === genres[target]) return m.reply('Denegado: Solo se permite matrimonio hombre y mujer.');
 
             const sent = await conn.sendMessage(m.chat, { 
-                text: `*💍 PROPUESTA DE MATRIMONIO 💍*\n\n@${user} te pide matrimonio. Responde a este mensaje con *#marry accept* para aceptar.`,
+                text: `*💍 PROPUESTA DE MATRIMONIO 💍*\n\n@${user} te pide matrimonio. Responde con *#marry accept* para aceptar.`,
                 mentions: [m.sender, targetJid]
             }, { quoted: m });
 
             proposals.set(sent.key.id, { from: user, fromJid: m.sender, to: targetJid });
 
         } catch (e) {
-            m.reply('Error en el sistema de matrimonio.');
+            m.reply('Error en el sistema.');
         }
     }
 };
