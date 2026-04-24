@@ -25,13 +25,11 @@ const profileCommand = {
             const user = targetJid.split('@')[0].split(':')[0];
             const mentions = [targetJid];
 
-            // Lectura de Datos
             const genres = fs.existsSync(genrePath) ? JSON.parse(fs.readFileSync(genrePath, 'utf-8')) : {};
             const casados = fs.existsSync(marryPath) ? JSON.parse(fs.readFileSync(marryPath, 'utf-8')) : {};
             const ecoDB = fs.existsSync(ecoPath) ? JSON.parse(fs.readFileSync(ecoPath, 'utf-8')) : {};
             const gachaDB = fs.existsSync(gachaPath) ? JSON.parse(fs.readFileSync(gachaPath, 'utf-8')) : {};
 
-            // Procesar Info
             const genero = genres[user] || 'No definido';
             const pareja = casados[user] ? `@${casados[user]}` : 'Soltero/a';
             if (casados[user]) mentions.push(casados[user] + '@s.whatsapp.net');
@@ -47,14 +45,10 @@ const profileCommand = {
                 pp = 'https://i.ibb.co/mJR6NBs/avatar.png'; 
             }
 
-            // Construcción del Mensaje
             let txt = `*${config.visuals.emoji3} \`PERFIL DE USUARIO\` ${config.visuals.emoji3}*\n\n`;
-            
             txt += `*✿︎ Usuario:* @${user}\n\n`;
-            
             txt += `*✿︎ Género:* ${genero}\n`;
             txt += `*✿︎ Pareja:* ${pareja}\n\n`;
-            
             txt += `*✿︎ INFO ECONOMY* ✿︎\n`;
             txt += `> ⴵ Personajes: *${totalPjs}*\n`;
             txt += `> ⴵ Cartera: *¥${wallet.toLocaleString()}*\n`;
@@ -68,7 +62,6 @@ const profileCommand = {
             }, { quoted: m });
 
         } catch (e) {
-            console.error(e);
             m.reply(`*${config.visuals.emoji2}* Error al cargar el perfil.`);
         }
     }
