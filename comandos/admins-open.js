@@ -1,5 +1,4 @@
 import { config } from '../config.js';
-import { avisos } from '../config/avisos.js';
 
 const openGroup = {
     name: 'open',
@@ -15,7 +14,7 @@ const openGroup = {
             const isBotAdmin = groupMetadata.participants.find(p => p.id === botNumber)?.admin;
 
             if (!isBotAdmin) {
-                return m.reply(avisos.noBotAdmin);
+                return m.reply(`*${config.visuals.emoji2}* El bot no posee rango de Administrador. No tengo poder para alterar los ajustes del grupo.\n\n> ¡Solicita el rango si deseas automatizar esta función!`);
             }
 
             if (!groupMetadata.announce) {
@@ -24,7 +23,7 @@ const openGroup = {
 
             await conn.groupSettingUpdate(m.chat, 'not_announcement');
             
-            m.reply(`*${config.visuals.emoji3} \`GRUPO ABIERTO\` ${config.visuals.emoji3}*\n\nLa restricción ha sido levantada.\n\n> ¡Mantengan el orden y respeten las reglas!`);
+            m.reply(`*${config.visuals.emoji3} \`GRUPO ABIERTO\` ${config.visuals.emoji3}*\n\nLa restricción ha sido levantada. Todos los miembros pueden enviar mensajes ahora.\n\n> ¡Mantengan el orden y respeten las reglas!`);
         } catch (e) {
             m.reply(`*${config.visuals.emoji2}* Error al intentar abrir el grupo.`);
         }
