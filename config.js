@@ -4,7 +4,7 @@ import path from 'path';
 export const config = {
     botName: 'Kazuma',
     owner: [
-        '573508941325@s.whatsapp.net', 
+        '5216653470605@s.whatsapp.net', 
         '125860308893859@lid'
     ], 
     prefix: '#',
