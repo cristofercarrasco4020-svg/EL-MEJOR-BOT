@@ -8,16 +8,6 @@ sesiones_subbots/*
 sockets/*
 !sockets/.gitkeep
 
-# --- CONFIGURACIÓN Y ESTRUCTURA ---
-# Ignorar los datos (JSON), pero no la estructura
-config/**/*.json
-
-# Permitir archivos de código
-!config/print.js
-!config/UploadFile.js
-
-# Permitir todos los .gitkeep para mantener las carpetas vacías en el repo
-!config/**/*.gitkeep
 
 # --- OTROS ---
 node_modules/
