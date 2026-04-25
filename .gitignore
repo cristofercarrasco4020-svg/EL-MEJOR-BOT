@@ -1,7 +1,4 @@
 # --- SEGURIDAD Y SESIONES ---
-# Nota: No ponemos config.js aquí, así que Git lo subirá automáticamente.
-
-# Ignorar contenido de carpetas críticas
 sesion_bot/*
 !sesion_bot/.gitkeep
 
@@ -11,11 +8,19 @@ sesiones_subbots/*
 sockets/*
 !sockets/.gitkeep
 
-# Ignorar la carpeta config completa (todo su contenido)
-config/
+# --- CONFIGURACIÓN ---
+# Ignorar bases de datos (archivos JSON) para no subir tus datos privados
+config/**/*.json
+
+# PERO permitir archivos de código necesarios
+!config/print.js
+!config/UploadFile.js
+
+# Mantener las carpetas visibles en el repositorio
+!config/.gitkeep
+!config/database/.gitkeep
 
 # --- OTROS ---
 node_modules/
 *.log
 .env
-
