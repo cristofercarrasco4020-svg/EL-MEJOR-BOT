@@ -1,0 +1,21 @@
+# --- SEGURIDAD Y SESIONES ---
+# Ignorar el archivo de configuración principal
+config.js
+
+# Ignorar todo el contenido de estas carpetas, pero NO la carpeta en sí
+sesion_bot/*
+!sesion_bot/.gitkeep
+
+sesiones_subbots/*
+!sesiones_subbots/.gitkeep
+
+# Ignorar el contenido de config/ (Cuidado: esto ignorará también las subcarpetas si no las exceptuamos)
+config/*
+!config/database/
+!config/.gitkeep
+
+# --- OTROS ---
+node_modules/
+*.log
+.env
+
