@@ -1,4 +1,4 @@
-# --- SEGURIDAD Y SESIONES ---
+ # --- SESIONES (Ignoradas totalmente) ---
 sesion_bot/*
 !sesion_bot/.gitkeep
 
@@ -8,17 +8,16 @@ sesiones_subbots/*
 sockets/*
 !sockets/.gitkeep
 
-# --- CONFIGURACIÓN ---
-# Ignorar bases de datos (archivos JSON) para no subir tus datos privados
+# --- CONFIGURACIÓN Y ESTRUCTURA ---
+# Ignorar los datos (JSON), pero no la estructura
 config/**/*.json
 
-# PERO permitir archivos de código necesarios
+# Permitir archivos de código
 !config/print.js
 !config/UploadFile.js
 
-# Mantener las carpetas visibles en el repositorio
-!config/.gitkeep
-!config/database/.gitkeep
+# Permitir todos los .gitkeep para mantener las carpetas vacías en el repo
+!config/**/*.gitkeep
 
 # --- OTROS ---
 node_modules/
