@@ -112,10 +112,9 @@ El cerebro detrás de toda la arquitectura de Kazuma y la red de sockets.
 ---
 
 ## 🛡️ CRÉDITOS
-* **Motor:** [Baileys](https://github.com/WhiskeySockets/Baileys)
-* **Diseño:** Inspirado en mi API YOTSUBA
+* **Motor:** [Baileys]
 
 ---
 <p align="center">
-  <i>Desarrollado en la República Dominicana</i>
+  <i>Desarrollado en Tijuana Baja California</i>
 </p>
