@@ -1,107 +1,13 @@
 {
-  "573508941325": {
-    "wallet": 1000004971,
-    "bank": 999999999,
-    "daily": {
-      "lastClaim": 0,
-      "streak": 0
-    },
-    "crime": {
-      "lastUsed": 1777143278264
-    },
-    "slut": {
-      "lastUsed": 1777143230219
-    }
-  },
-  "5219931170934": {
-    "wallet": 0,
-    "bank": 999977276887,
-    "slut": {
-      "lastUsed": 1777107387326
-    },
-    "crime": {
-      "lastUsed": 1777107393582
-    },
-    "work": {
-      "lastUsed": 1777105550697
-    }
-  },
-  "5219931170265": {
-    "wallet": 999999841272660,
-    "bank": 10000000000000000000,
-    "daily": {
-      "lastClaim": 0,
-      "streak": 0
-    },
-    "crime": {
-      "lastUsed": 1777106092897
-    },
-    "slut": {
-      "lastUsed": 1777107152656
-    },
-    "work": {
-      "lastUsed": 1777108026187
-    }
-  },
   "5216653470605": {
-    "wallet": 1099346696,
-    "bank": 0,
-    "work": {
-      "lastUsed": 1777105537346
-    }
-  },
-  "5219321185671": {
-    "wallet": 26647,
-    "bank": 0,
-    "work": {
-      "lastUsed": 1777107363563
-    },
-    "crime": {
-      "lastUsed": 1777107369530
-    },
-    "slut": {
-      "lastUsed": 1777107371772
-    }
-  },
-  "50557888080": {
-    "wallet": 9.999999999999e+21,
-    "bank": 0,
-    "work": {
-      "lastUsed": 1777107335606
-    },
-    "crime": {
-      "lastUsed": 1777107339970
-    },
-    "slut": {
-      "lastUsed": 1777107343120
-    }
-  },
-  "5217717210059": {
     "wallet": 0,
-    "bank": 9897,
-    "daily": {
-      "lastClaim": 0,
-      "streak": 0
-    },
-    "crime": {
-      "lastUsed": 1777143251660
-    },
-    "slut": {
-      "lastUsed": 1777143252384
-    },
-    "work": {
-      "lastUsed": 1777143269393
-    }
-  },
-  "5216693258538": {
-    "wallet": 39685,
     "bank": 0,
     "daily": {
       "lastClaim": 0,
       "streak": 0
     },
     "crime": {
-      "lastUsed": 1777143251844
+      "lastUsed": 0
     }
   }
 }
