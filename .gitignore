@@ -1,15 +1,57 @@
- # --- SESIONES (Ignoradas totalmente) ---
-sesion_bot/*
-!sesion_bot/.gitkeep
-
-sesiones_subbots/*
-!sesiones_subbots/.gitkeep
-
-sockets/*
-!sockets/.gitkeep
-
-
-# --- OTROS ---
+# Node
 node_modules/
-*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Entorno / secretos
 .env
+.env.*.local
+.env.local
+
+# Sesiones / credenciales de Baileys (no subir)
+sesion_bot/
+sesiones_subbots/
+
+# Bases de datos o caches en disco (archivos de runtime)
+# Ignorar datos que cambian en ejecución (por ejemplo 'sent.json' o sqlite)
+config/database/**/*.db
+config/database/**/*.sqlite
+config/database/**/sent*.json
+config/database/**/cache*.json
+
+# Si usas Keyv/sqlite
+*.sqlite
+*.db
+*.db-journal
+
+# Logs y archivos temporales
+*.log
+logs/
+pids/
+*.pid
+tmp/
+temp/
+.cache/
+
+# IDE / editor
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Coverage / build
+coverage/
+.nyc_output/
+dist/
+build/
+
+# Otros
+.envrc
+.babelrc
+*.local
+.node_repl_history
