@@ -1,6 +1,17 @@
 {
+  "573508941325": {
+    "wallet": 999999999,
+    "bank": 999999999,
+    "daily": {
+      "lastClaim": 0,
+      "streak": 0
+    },
+    "crime": {
+      "lastUsed": 0
+    }
+  },
   "5216653470605": {
-    "wallet": 0,
+    "wallet": 99999985335,
     "bank": 0,
     "daily": {
       "lastClaim": 0,
